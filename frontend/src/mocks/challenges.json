@@ -1,0 +1,53 @@
+{
+  "list": [
+    {
+      "id": "ch-1",
+      "name": "No Coffee Week",
+      "goal": 50,
+      "unit": "CAD",
+      "endDate": "2025-03-10",
+      "participants": 12,
+      "joined": true,
+      "progress": 35,
+      "streak": 3,
+      "description": "Skip café purchases for 7 days"
+    },
+    {
+      "id": "ch-2",
+      "name": "March Saver",
+      "goal": 200,
+      "unit": "CAD",
+      "endDate": "2025-03-31",
+      "participants": 8,
+      "joined": true,
+      "progress": 120,
+      "streak": 5,
+      "description": "Save $200 by end of March"
+    },
+    {
+      "id": "ch-3",
+      "name": "Weekend Cook-off",
+      "goal": 2,
+      "unit": "meals",
+      "endDate": "2025-03-09",
+      "participants": 5,
+      "joined": false,
+      "description": "Cook at home 2 weekend meals"
+    }
+  ],
+  "leaderboard": [
+    { "rank": 1, "name": "Alex K.", "value": 48 },
+    { "rank": 2, "name": "You", "value": 35 },
+    { "rank": 3, "name": "Sam R.", "value": 32 },
+    { "rank": 4, "name": "Jordan M.", "value": 28 },
+    { "rank": 5, "name": "Casey L.", "value": 20 }
+  ],
+  "badges": [
+    { "id": "b1", "name": "First Save", "description": "Completed your first challenge", "earned": true, "icon": "Trophy" },
+    { "id": "b2", "name": "3-Day Streak", "description": "3 days in a row on track", "earned": true, "icon": "Flame" },
+    { "id": "b3", "name": "Team Player", "description": "Joined a group challenge", "earned": true, "icon": "Users" },
+    { "id": "b4", "name": "5-Day Streak", "description": "5 days in a row on track", "earned": false, "icon": "Flame" },
+    { "id": "b5", "name": "Budget Master", "description": "Under budget for a full month", "earned": false, "icon": "Target" },
+    { "id": "b6", "name": "Early Bird", "description": "Set a goal in the first week", "earned": false, "icon": "Sunrise" }
+  ]
+}

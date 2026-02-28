@@ -1,0 +1,9 @@
+{
+  "responses": {
+    "default": "Based on your calendar and spending patterns, I'd recommend reviewing your upcoming social events—they often drive 30% of discretionary spend. Want me to suggest a weekly cap?",
+    "overspend": "Your overspend this month is mainly from 3 areas: dining out (+$120 vs last month), ride-share during busy work weeks (+$45), and a one-off gift. I can help you set category caps for next month.",
+    "afford_weekend": "With $588 left in your budget and ~$156 predicted for the weekend (brunch + one dinner), you're in good shape. Just avoid extra Uber or impulse shopping to stay on track.",
+    "trigger": "Your biggest spending triggers are: 1) Calendar events with 'dinner' or 'lunch', 2) Busy work weeks (more Uber), 3) Weekend social plans. We can set alerts before high-spend events.",
+    "savings_goal": "Given your current burn rate, saving $200 by end of March is doable. Focus on: cooking 2 weekend meals, skipping 2 café runs, and pausing one unused subscription. I can turn these into a challenge."
+  }
+}

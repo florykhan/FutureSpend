@@ -1,0 +1,27 @@
+{
+  "next7DaysTotal": 412,
+  "remainingBudget": 588,
+  "monthlyBudget": 1000,
+  "riskScore": "MED",
+  "daily": [
+    { "date": "2025-03-03", "predictedSpend": 40, "food": 40, "transport": 0, "social": 0, "other": 0 },
+    { "date": "2025-03-04", "predictedSpend": 9, "food": 9, "transport": 0, "social": 0, "health": 0 },
+    { "date": "2025-03-05", "predictedSpend": 85, "food": 85, "transport": 0, "social": 0, "other": 0 },
+    { "date": "2025-03-06", "predictedSpend": 52, "food": 30, "transport": 22, "social": 0, "other": 0 },
+    { "date": "2025-03-07", "predictedSpend": 35, "food": 20, "transport": 15, "social": 0, "other": 0 },
+    { "date": "2025-03-08", "predictedSpend": 45, "food": 45, "transport": 0, "social": 0, "other": 0 },
+    { "date": "2025-03-09", "predictedSpend": 156, "food": 80, "transport": 30, "social": 46, "other": 0 }
+  ],
+  "byCategory": [
+    { "name": "Food", "value": 259, "key": "food" },
+    { "name": "Transport", "value": 67, "key": "transport" },
+    { "name": "Social", "value": 46, "key": "social" },
+    { "name": "Shopping", "value": 25, "key": "shopping" },
+    { "name": "Subscriptions", "value": 15, "key": "subscriptions" }
+  ],
+  "recommendedActions": [
+    { "id": "ra-1", "label": "Set a weekend cap of $40", "impact": "~$30 saved", "type": "cap" },
+    { "id": "ra-2", "label": "Cook at home 2 nights", "impact": "~$25 saved", "type": "habit" },
+    { "id": "ra-3", "label": "Pause subscription (unused app)", "impact": "~$12/month", "type": "subscription" }
+  ]
+}

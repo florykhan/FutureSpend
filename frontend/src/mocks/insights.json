@@ -1,0 +1,58 @@
+[
+  {
+    "id": "ins-1",
+    "icon": "Car",
+    "title": "Uber spikes on busy weeks",
+    "description": "You spend 2.3x more on ride-share during weeks with 4+ work meetings.",
+    "type": "spend"
+  },
+  {
+    "id": "ins-2",
+    "icon": "UtensilsCrossed",
+    "title": "Lunch out = higher daily spend",
+    "description": "Days with a \"lunch\" calendar event average $18 more in food spend.",
+    "type": "spend"
+  },
+  {
+    "id": "ins-3",
+    "icon": "TrendingDown",
+    "title": "Weekend cooking saves $40",
+    "description": "When you cook at home 2+ weekend nights, you save ~$40 vs. eating out.",
+    "type": "saving"
+  },
+  {
+    "id": "ins-4",
+    "icon": "Calendar",
+    "title": "Social events drive spending",
+    "description": "Dinner and \"birthday\" events are your top predicted spend triggers this week.",
+    "type": "alert"
+  },
+  {
+    "id": "ins-5",
+    "icon": "Coffee",
+    "title": "Coffee runs add up",
+    "description": "You average 4 café visits per week; cutting to 2 could save ~$24/month.",
+    "type": "habit"
+  },
+  {
+    "id": "ins-6",
+    "icon": "Sparkles",
+    "title": "Quiet weeks = under budget",
+    "description": "Weeks with fewer than 3 social events usually end 15% under budget.",
+    "type": "saving"
+  },
+  {
+    "id": "ins-7",
+    "icon": "CreditCard",
+    "title": "Subscription creep",
+    "description": "You have 5 recurring subscriptions; 2 haven't been used in 30+ days.",
+    "type": "alert"
+  },
+  {
+    "id": "ins-8",
+    "icon": "Target",
+    "title": "Best day to save",
+    "description": "Tuesdays and Wednesdays are your lowest-spend days—good for no-spend goals.",
+    "type": "habit"
+  }
+]
