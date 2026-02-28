@@ -231,3 +231,186 @@ def vault_action(request: VaultRequest):
         vault_name=request.vault_name,
     )
     return cmd.model_dump()
+
+
+# ── Mock Bank API (demo — replaced by RBC in production) ──────────────────
+
+
+class _MockBank:
+    """In-memory bank ledger for the hackathon demo."""
+
+    def __init__(self, balance: float = 2500.0) -> None:
+        self.checking: float = balance
+        self.vaults: dict[str, float] = {"default": 0.0}
+        self.transactions: list[dict[str, Any]] = []
+
+    def lock(self, amount: float, vault: str, reason: str) -> dict[str, Any]:
+        if amount > self.checking:
+            return {"ok": False, "error": "Insufficient funds"}
+        self.checking -= amount
+        self.vaults.setdefault(vault, 0.0)
+        self.vaults[vault] += amount
+        txn = {
+            "type": "lock",
+            "amount": amount,
+            "vault": vault,
+            "reason": reason,
+            "checking_after": round(self.checking, 2),
+            "vault_after": round(self.vaults[vault], 2),
+        }
+        self.transactions.append(txn)
+        return {"ok": True, **txn}
+
+    def unlock(self, amount: float, vault: str, reason: str) -> dict[str, Any]:
+        vbal = self.vaults.get(vault, 0.0)
+        if amount > vbal:
+            return {"ok": False, "error": f"Vault '{vault}' only has ${vbal:.2f}"}
+        self.vaults[vault] -= amount
+        self.checking += amount
+        txn = {
+            "type": "unlock",
+            "amount": amount,
+            "vault": vault,
+            "reason": reason,
+            "checking_after": round(self.checking, 2),
+            "vault_after": round(self.vaults[vault], 2),
+        }
+        self.transactions.append(txn)
+        return {"ok": True, **txn}
+
+    def summary(self) -> dict[str, Any]:
+        return {
+            "checking": round(self.checking, 2),
+            "vaults": {k: round(v, 2) for k, v in self.vaults.items()},
+            "total": round(self.checking + sum(self.vaults.values()), 2),
+            "recent_transactions": self.transactions[-10:],
+        }
+
+
+_bank = _MockBank()
+
+
+@app.get("/api/bank/summary")
+def bank_summary():
+    """Mock bank account summary — checking balance + vaults."""
+    return _bank.summary()
+
+
+@app.post("/api/bank/lock")
+def bank_lock(request: VaultRequest):
+    """Lock funds from checking into a vault."""
+    return _bank.lock(request.amount, request.vault_name, request.reason)
+
+
+@app.post("/api/bank/unlock")
+def bank_unlock(request: VaultRequest):
+    """Unlock funds from a vault back to checking."""
+    return _bank.unlock(request.amount, request.vault_name, request.reason)
+
+
+# ── Mock Calendar (demo data for frontend wiring) ─────────────────────────
+
+
+_MOCK_CALENDAR_EVENTS: list[dict[str, Any]] = [
+    {
+        "id": "evt-1",
+        "title": "Team lunch - Downtown",
+        "start": "2026-03-03T12:00:00",
+        "end": "2026-03-03T13:30:00",
+        "calendarType": "work",
+        "location": "Earls Restaurant",
+        "attendees": 4,
+    },
+    {
+        "id": "evt-2",
+        "title": "Coffee with Sarah",
+        "start": "2026-03-03T15:00:00",
+        "end": "2026-03-03T16:00:00",
+        "calendarType": "social",
+    },
+    {
+        "id": "evt-3",
+        "title": "Dentist appointment",
+        "start": "2026-03-04T09:00:00",
+        "end": "2026-03-04T10:00:00",
+        "calendarType": "health",
+    },
+    {
+        "id": "evt-4",
+        "title": "Birthday dinner - Alex",
+        "start": "2026-03-05T19:00:00",
+        "end": "2026-03-05T22:00:00",
+        "calendarType": "social",
+        "attendees": 6,
+        "location": "The Keg Steakhouse",
+    },
+    {
+        "id": "evt-5",
+        "title": "Uber to office (client meeting)",
+        "start": "2026-03-06T08:30:00",
+        "end": "2026-03-06T09:00:00",
+        "calendarType": "work",
+    },
+    {
+        "id": "evt-6",
+        "title": "Weekend brunch with friends",
+        "start": "2026-03-08T11:00:00",
+        "end": "2026-03-08T13:00:00",
+        "calendarType": "social",
+        "attendees": 3,
+        "location": "OEB Breakfast Co.",
+    },
+    {
+        "id": "evt-7",
+        "title": "Movie night — Dune 3",
+        "start": "2026-03-08T19:00:00",
+        "end": "2026-03-08T22:00:00",
+        "calendarType": "personal",
+        "attendees": 2,
+    },
+    {
+        "id": "evt-8",
+        "title": "Tim Hortons run",
+        "start": "2026-03-04T07:30:00",
+        "end": "2026-03-04T08:00:00",
+        "calendarType": "personal",
+    },
+    {
+        "id": "evt-9",
+        "title": "Starbucks before class",
+        "start": "2026-03-05T08:00:00",
+        "end": "2026-03-05T08:30:00",
+        "calendarType": "personal",
+    },
+    {
+        "id": "evt-10",
+        "title": "Uber to downtown hangout",
+        "start": "2026-03-07T18:00:00",
+        "end": "2026-03-07T18:30:00",
+        "calendarType": "social",
+    },
+]
+
+
+@app.get("/api/calendar/events")
+def get_mock_calendar():
+    """
+    Returns mock calendar events for demo / frontend wiring.
+    In production, this calls the Google Calendar API with OAuth.
+    """
+    return _MOCK_CALENDAR_EVENTS
+
+
+@app.get("/api/demo/dashboard")
+def demo_dashboard():
+    """
+    One-shot demo endpoint: takes mock calendar data, runs the full
+    pipeline, and returns everything the frontend needs.
+    No API key or calendar OAuth required.
+    """
+    orchestrator = _get_orchestrator("demo")
+    return orchestrator.run_pipeline(
+        raw_events=_MOCK_CALENDAR_EVENTS,
+        monthly_budget=1800.0,
+        spent_so_far=620.0,
+    )
