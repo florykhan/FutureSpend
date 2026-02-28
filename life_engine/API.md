@@ -167,8 +167,8 @@ json
 
 rank:integer – 1-based ranking (ties share same rank)
 
-status:
-1) string or null – "under" 
+status: 
+        string or null – "under" 
         if spent ≤ target, 
         
         "over" if spent > target, 
