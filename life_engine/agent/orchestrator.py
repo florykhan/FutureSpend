@@ -8,7 +8,7 @@ Follows the OpenClaw Captain's Chair loop pattern (simplified):
   4. If text response → return to user
   5. Loop serialized per-session, max iterations capped
 
-Uses Anthropic's Claude API with native tool/function calling.
+Uses Google's Gemini API with native tool/function calling.
 """
 
 from __future__ import annotations
@@ -18,7 +18,8 @@ import os
 from datetime import datetime
 from typing import Any
 
-import anthropic
+import google.generativeai as genai
+from google.generativeai import protos
 
 from .schemas import (
     CalendarEvent,
@@ -41,7 +42,7 @@ from .tools import (
 )
 
 MAX_TOOL_ITERATIONS = 8
-MODEL = "claude-sonnet-4-5-20250514"
+MODEL = "gemini-1.5-flash"
 
 SYSTEM_PROMPT = """\
 You are FutureSpend — an intelligent financial co-pilot that transforms \
@@ -104,10 +105,19 @@ class Orchestrator:
         model: str = MODEL,
         monthly_budget: float = 1000.0,
     ) -> None:
-        self._client = anthropic.Anthropic(
-            api_key=api_key or os.environ.get("ANTHROPIC_API_KEY", ""),
+        resolved_api_key = (
+            api_key
+            or os.environ.get("GEMINI_API_KEY")
+            or os.environ.get("GOOGLE_API_KEY", "")
         )
+        genai.configure(api_key=resolved_api_key)
         self._model = model
+        self._gen_model = genai.GenerativeModel(
+            model_name=self._model,
+            tools=self._build_gemini_tools(),
+            system_instruction=self._system_prompt(),
+        )
+        self._chat = self._gen_model.start_chat(history=[])
         self._monthly_budget = monthly_budget
         self._state = SessionState()
         self._message_history: list[dict[str, Any]] = []
@@ -120,6 +130,53 @@ class Orchestrator:
         return SYSTEM_PROMPT.format(
             current_date=datetime.now().strftime("%Y-%m-%d"),
         )
+
+    def _build_gemini_tools(self) -> list[dict[str, Any]]:
+        """Convert internal tool definitions into Gemini function declarations."""
+        function_declarations = []
+        for tool in TOOL_DEFINITIONS:
+            function_def = tool.get("function", {})
+            function_declarations.append(
+                {
+                    "name": function_def.get("name"),
+                    "description": function_def.get("description", ""),
+                    "parameters": function_def.get(
+                        "parameters",
+                        {"type": "object", "properties": {}},
+                    ),
+                }
+            )
+        return [{"function_declarations": function_declarations}]
+
+    def _extract_tool_calls(self, response: Any) -> list[tuple[str, dict[str, Any]]]:
+        """Extract Gemini function calls from the response."""
+        calls: list[tuple[str, dict[str, Any]]] = []
+        for candidate in getattr(response, "candidates", []) or []:
+            content = getattr(candidate, "content", None)
+            for part in getattr(content, "parts", []) or []:
+                function_call = getattr(part, "function_call", None)
+                if not function_call:
+                    continue
+                raw_args = getattr(function_call, "args", {}) or {}
+                if hasattr(raw_args, "items"):
+                    args = {k: v for k, v in raw_args.items()}
+                else:
+                    args = {}
+                calls.append((function_call.name, args))
+        return calls
+
+    def _extract_text(self, response: Any) -> str:
+        """Extract text parts from a Gemini response."""
+        text_parts: list[str] = []
+        for candidate in getattr(response, "candidates", []) or []:
+            content = getattr(candidate, "content", None)
+            for part in getattr(content, "parts", []) or []:
+                text = getattr(part, "text", None)
+                if text:
+                    text_parts.append(text)
+        if text_parts:
+            return "".join(text_parts)
+        return getattr(response, "text", "") or ""
 
     def _execute_tool(self, name: str, input_args: dict[str, Any]) -> str:
         """
@@ -196,52 +253,34 @@ class Orchestrator:
             "content": user_message,
         })
 
+        response = self._chat.send_message(user_message)
+
         for _ in range(MAX_TOOL_ITERATIONS):
-            response = self._client.messages.create(
-                model=self._model,
-                max_tokens=4096,
-                system=self._system_prompt(),
-                tools=TOOL_DEFINITIONS,
-                messages=self._message_history,
-            )
-
-            # Check if the response contains tool use
-            tool_use_blocks = [
-                b for b in response.content if b.type == "tool_use"
-            ]
-            text_blocks = [
-                b for b in response.content if b.type == "text"
-            ]
-
-            if not tool_use_blocks:
-                # Pure text response — we're done
-                reply = "".join(b.text for b in text_blocks)
+            tool_calls = self._extract_tool_calls(response)
+            if not tool_calls:
+                reply = self._extract_text(response).strip()
+                if not reply:
+                    reply = "I couldn't generate a response."
                 self._message_history.append({
                     "role": "assistant",
-                    "content": response.content,
+                    "content": reply,
                 })
                 return reply
 
-            # Append the assistant message with tool_use blocks
-            self._message_history.append({
-                "role": "assistant",
-                "content": response.content,
-            })
-
             # Execute each tool and build tool_result messages
-            tool_results = []
-            for block in tool_use_blocks:
-                result_str = self._execute_tool(block.name, block.input)
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": block.id,
-                    "content": result_str,
-                })
+            tool_results: list[Any] = []
+            for tool_name, tool_args in tool_calls:
+                result_str = self._execute_tool(tool_name, tool_args)
+                tool_results.append(
+                    protos.Part(
+                        function_response=protos.FunctionResponse(
+                            name=tool_name,
+                            response={"result": result_str},
+                        )
+                    )
+                )
 
-            self._message_history.append({
-                "role": "user",
-                "content": tool_results,
-            })
+            response = self._chat.send_message(tool_results)
 
         # Safety: if we hit max iterations, return whatever text we have
         return "I've processed your request but hit the analysis limit. Here's what I found so far based on the tools I ran."
