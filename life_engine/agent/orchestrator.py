@@ -36,7 +36,7 @@ log = logging.getLogger("futurespend.orchestrator")
 
 MAX_TOOL_ITERATIONS = 10
 MAX_RETRIES_PER_TOOL = 2
-MODEL = "gemini-3.0-flash"
+MODEL = "gemini-3-flash-preview"
 
 SYSTEM_PROMPT = """\
 You are FutureSpend — an intelligent financial co-pilot that transforms \
