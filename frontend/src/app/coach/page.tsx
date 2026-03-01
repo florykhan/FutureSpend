@@ -115,7 +115,7 @@ export default function CoachPage() {
 
   /* ─── Auto-scroll on new messages / loading state ─── */
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, isLoading]);
 
   /* ─── Character-by-character stream animation ─── */
@@ -284,34 +284,18 @@ export default function CoachPage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-60" />
         <div className="pointer-events-none absolute inset-y-24 right-[-12%] h-72 w-72 rounded-full bg-accent-blue/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-[-8%] left-[-10%] h-80 w-80 rounded-full bg-accent-purple/10 blur-3xl" />
-        {/* ─── Header ─── */}
-        <div className="relative z-10 flex flex-shrink-0 items-center gap-4 border-b border-white/[0.1] bg-black/10 px-6 py-5 backdrop-blur-sm lg:px-8">
-          <div className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-accent-blue/30 via-sky-300/15 to-accent-purple/25 shadow-[0_18px_40px_-24px_rgba(46,144,250,0.95)]">
-            <Lightning size={24} weight="fill" className="text-white" />
-            <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-[#0b0b0f] bg-success" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[1.75rem] font-black leading-none tracking-[-0.04em] text-white sm:text-[2rem]">
-              FutureSpend Coach
-            </p>
-            <p className="mt-1 text-sm font-bold uppercase tracking-[0.22em] text-white">
-              Powered by multi-calendar intelligence
-            </p>
-          </div>
-        </div>
-
         {/* ─── Messages viewport ─── */}
         <div className="relative z-10 flex-1 min-h-0 overflow-y-auto">
-          <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-8 lg:px-8">
+          <div className="mx-auto flex max-w-4xl flex-col gap-5 px-4 pb-6 pt-24 sm:gap-6 sm:px-5 sm:pb-8 sm:pt-28 lg:px-8">
 
             {/* Welcome screen (shown when no messages) */}
             {isEmpty && (
-              <div className="flex animate-fade-up flex-col items-center gap-10 py-12 text-center">
+              <div className="flex animate-fade-up flex-col items-center gap-7 py-8 text-center sm:gap-10 sm:py-12">
                 <div className="text-center">
-                  <h1 className="text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">
+                  <h1 className="text-3xl font-black tracking-[-0.05em] text-white sm:text-4xl lg:text-5xl">
                     Good to see you.
                   </h1>
-                  <p className="mt-3 text-lg font-semibold leading-8 text-white sm:text-xl">
+                  <p className="mt-2 text-base font-semibold leading-7 text-white sm:mt-3 sm:text-lg sm:leading-8 lg:text-xl">
                     Ask anything about your spending or pick a prompt below.
                   </p>
                 </div>
@@ -323,18 +307,18 @@ export default function CoachPage() {
                       key={p.label}
                       type="button"
                       onClick={() => sendMessage(p.query)}
-                      className="group flex min-h-[120px] items-start gap-4 rounded-[1.35rem] border border-white/[0.14] bg-white/[0.045] px-5 py-5 text-left shadow-[0_28px_60px_-38px_rgba(46,144,250,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.26] hover:bg-white/[0.08]"
+                      className="group flex min-h-[104px] items-start gap-3 rounded-[1.2rem] border border-white/[0.14] bg-white/[0.045] px-4 py-4 text-left shadow-[0_28px_60px_-38px_rgba(46,144,250,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.26] hover:bg-white/[0.08] sm:min-h-[120px] sm:gap-4 sm:rounded-[1.35rem] sm:px-5 sm:py-5"
                     >
                       <p.icon
                         size={20}
                         weight="duotone"
                         className="mt-0.5 flex-shrink-0 text-white transition-transform duration-200 group-hover:scale-110"
                       />
-                      <div className="space-y-1">
-                        <p className="text-base font-bold tracking-[-0.02em] text-white">
+                      <div className="space-y-0.5 sm:space-y-1">
+                        <p className="text-sm font-bold tracking-[-0.02em] text-white sm:text-base">
                           {p.label}
                         </p>
-                        <p className="text-sm font-semibold leading-6 text-white">
+                        <p className="text-xs font-semibold leading-5 text-white sm:text-sm sm:leading-6">
                           {p.description}
                         </p>
                       </div>
@@ -349,13 +333,13 @@ export default function CoachPage() {
               <div
                 key={msg.id}
                 className={cn(
-                  "flex gap-3.5 animate-fade-up",
+                  "flex gap-3 animate-fade-up sm:gap-3.5",
                   msg.role === "user" ? "flex-row-reverse" : "flex-row"
                 )}
               >
                 {/* Assistant avatar */}
                 {msg.role === "assistant" && (
-                  <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] shadow-[0_16px_34px_-26px_rgba(46,144,250,1)]">
+                  <div className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] shadow-[0_16px_34px_-26px_rgba(46,144,250,1)] sm:h-8 sm:w-8">
                     <Lightning size={15} weight="fill" className="text-white" />
                   </div>
                 )}
@@ -369,16 +353,16 @@ export default function CoachPage() {
                   {/* Bubble */}
                   <div
                     className={cn(
-                      "text-base font-semibold leading-8 text-white sm:text-lg",
+                      "text-sm font-semibold leading-7 text-white sm:text-base sm:leading-8 lg:text-lg",
                       msg.role === "user"
-                        ? "max-w-xl rounded-[1.6rem] rounded-tr-md border border-white/[0.12] bg-white/[0.08] px-5 py-4 shadow-[0_30px_60px_-42px_rgba(255,255,255,0.65)]"
-                        : "max-w-3xl rounded-[1.6rem] rounded-tl-md border border-white/[0.08] bg-black/10 px-5 py-4 shadow-[0_30px_60px_-44px_rgba(46,144,250,0.6)]"
+                        ? "max-w-xl rounded-[1.35rem] rounded-tr-md border border-white/[0.12] bg-white/[0.08] px-4 py-3.5 shadow-[0_30px_60px_-42px_rgba(255,255,255,0.65)] sm:rounded-[1.6rem] sm:px-5 sm:py-4"
+                        : "max-w-3xl rounded-[1.35rem] rounded-tl-md border border-white/[0.08] bg-black/10 px-4 py-3.5 shadow-[0_30px_60px_-44px_rgba(46,144,250,0.6)] sm:rounded-[1.6rem] sm:px-5 sm:py-4"
                     )}
                   >
                     {msg.role === "assistant" ? (
                       <FormattedAssistantMessage
                         content={msg.content}
-                        className="text-base font-semibold leading-8 text-white sm:text-lg"
+                        className="text-sm font-semibold leading-7 text-white sm:text-base sm:leading-8 lg:text-lg"
                       />
                     ) : (
                       msg.content
@@ -404,7 +388,7 @@ export default function CoachPage() {
                             actionStatus[action.id] === "done"
                           }
                           className={cn(
-                            "inline-flex items-center rounded-full border px-3.5 py-1.5 text-sm font-bold transition-colors",
+                            "inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-bold transition-colors sm:px-3.5 sm:text-sm",
                             actionStatus[action.id] === "done"
                               ? "border-success/35 bg-success/15 text-success"
                               : "border-white/[0.14] bg-white/[0.08] text-white hover:border-white/[0.26] hover:bg-white/[0.12]",
@@ -431,11 +415,11 @@ export default function CoachPage() {
 
             {/* Typing indicator */}
             {isLoading && (
-              <div className="flex gap-3.5 animate-fade-up">
-                <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06]">
+              <div className="flex gap-3 animate-fade-up sm:gap-3.5">
+                <div className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] sm:h-8 sm:w-8">
                   <Lightning size={15} weight="fill" className="text-white" />
                 </div>
-                <div className="flex items-center gap-2 py-4">
+                <div className="flex items-center gap-2 py-3.5 sm:py-4">
                   <span
                     className="h-2 w-2 rounded-full bg-white animate-bounce"
                     style={{ animationDelay: "0ms" }}
@@ -458,9 +442,9 @@ export default function CoachPage() {
         </div>
 
         {/* ─── Composer ─── */}
-        <div className="relative z-10 flex-shrink-0 border-t border-white/[0.1] bg-black/10 px-5 py-5 backdrop-blur-sm lg:px-8">
+        <div className="relative z-10 flex-shrink-0 border-t border-white/[0.1] bg-black/10 px-4 py-2.5 backdrop-blur-sm sm:px-5 sm:py-3 lg:px-8">
           <div className="mx-auto max-w-4xl">
-            <div className="flex min-h-[92px] items-end gap-4 rounded-[1.75rem] border border-white/[0.14] bg-white/[0.045] px-5 py-4 shadow-[0_32px_80px_-52px_rgba(46,144,250,0.95)] transition-colors focus-within:border-white/[0.28]">
+            <div className="flex min-h-[56px] items-center gap-3 rounded-[1.1rem] border border-white/[0.14] bg-white/[0.045] px-3.5 py-2.5 shadow-[0_32px_80px_-52px_rgba(46,144,250,0.95)] transition-colors focus-within:border-white/[0.28] sm:min-h-[62px] sm:gap-3.5 sm:rounded-[1.25rem] sm:px-4 sm:py-3">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -471,24 +455,24 @@ export default function CoachPage() {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about spending, challenges, calendar..."
                 disabled={isLoading}
-                rows={2}
-                style={{ maxHeight: 180 }}
-                className="flex-1 resize-none bg-transparent text-lg font-semibold leading-8 text-white outline-none placeholder:text-white/55 disabled:opacity-50 sm:text-xl"
+                rows={1}
+                style={{ maxHeight: 140 }}
+                className="flex-1 resize-none bg-transparent py-2 text-sm font-semibold leading-6 text-white outline-none placeholder:text-white/55 disabled:opacity-50 sm:text-base sm:leading-7"
               />
               <button
                 type="button"
                 onClick={() => sendMessage(input)}
                 disabled={!input.trim() || isLoading || !!streamId}
-                className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-accent-blue shadow-[0_24px_50px_-28px_rgba(46,144,250,1)] transition-all hover:scale-[1.03] hover:bg-[#4ba2fb] disabled:cursor-not-allowed disabled:opacity-35"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-accent-blue shadow-[0_24px_50px_-28px_rgba(46,144,250,1)] transition-all hover:scale-[1.03] hover:bg-[#4ba2fb] disabled:cursor-not-allowed disabled:opacity-35 sm:h-10 sm:w-10 sm:rounded-xl"
                 aria-label="Send message"
               >
-                <ArrowUp size={20} weight="bold" className="text-white" />
+                <ArrowUp size={18} weight="bold" className="text-white" />
               </button>
             </div>
-            <p className="mt-3 text-center text-sm font-semibold text-white">
-              <kbd className="rounded-lg border border-white/[0.14] bg-white/[0.06] px-2 py-1 font-mono text-white">Enter</kbd>{" "}
+            <p className="mt-1.5 text-center text-xs font-semibold text-white sm:mt-2 sm:text-xs">
+              <kbd className="rounded-md border border-white/[0.14] bg-white/[0.06] px-1.5 py-0.5 font-mono text-white">Enter</kbd>{" "}
               to send ·{" "}
-              <kbd className="rounded-lg border border-white/[0.14] bg-white/[0.06] px-2 py-1 font-mono text-white">⇧ Enter</kbd>{" "}
+              <kbd className="rounded-md border border-white/[0.14] bg-white/[0.06] px-1.5 py-0.5 font-mono text-white">⇧ Enter</kbd>{" "}
               for newline
             </p>
           </div>

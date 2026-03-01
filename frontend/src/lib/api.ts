@@ -19,6 +19,54 @@ interface DashboardQueryOptions {
   sessionId?: string;
 }
 
+interface RequestOptions extends Omit<RequestInit, "body"> {
+  method?: string;
+  body?: unknown;
+  cacheTtlMs?: number;
+}
+
+interface CacheEntry {
+  data: unknown;
+  expiresAt: number;
+}
+
+const REQUEST_CACHE_PREFIX = "request:";
+const DEFAULT_GET_CACHE_TTL_MS = 60_000;
+const responseCache = new Map<string, CacheEntry>();
+const inFlightGetRequests = new Map<string, Promise<unknown>>();
+
+function getMethod(rawMethod?: string): string {
+  return (rawMethod ?? "GET").toUpperCase();
+}
+
+function getCacheKey(method: string, url: string): string {
+  return `${REQUEST_CACHE_PREFIX}${method}:${url}`;
+}
+
+function getCachedResponse<T>(cacheKey: string): T | null {
+  const entry = responseCache.get(cacheKey);
+  if (!entry) return null;
+
+  if (entry.expiresAt <= Date.now()) {
+    responseCache.delete(cacheKey);
+    return null;
+  }
+
+  return entry.data as T;
+}
+
+function setCachedResponse(cacheKey: string, data: unknown, ttlMs: number): void {
+  responseCache.set(cacheKey, {
+    data,
+    expiresAt: Date.now() + ttlMs,
+  });
+}
+
+function clearRequestCache(): void {
+  responseCache.clear();
+  inFlightGetRequests.clear();
+}
+
 const getBaseUrl = (): string => {
   const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL;
   if (configuredBaseUrl) {
@@ -57,32 +105,78 @@ function buildDashboardQuery(options: DashboardQueryOptions = {}): string {
 
 async function request<T>(
   path: string,
-  options: Omit<RequestInit, "body"> & { method?: string; body?: unknown } = {}
+  options: RequestOptions = {}
 ): Promise<T> {
   const base = getBaseUrl();
   if (!base) {
     throw new Error("NEXT_PUBLIC_API_URL is not set");
   }
   const url = path.startsWith("http") ? path : `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
-  const { method = "GET", body, ...rest } = options;
+  const { method: rawMethod = "GET", body, cacheTtlMs = DEFAULT_GET_CACHE_TTL_MS, ...rest } = options;
+  const method = getMethod(rawMethod);
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(rest.headers as HeadersInit),
   };
-  const res = await fetch(url, {
-    ...rest,
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API ${method} ${path}: ${res.status} ${text}`);
+  const cacheKey = getCacheKey(method, url);
+  const shouldUseCache = method === "GET" && cacheTtlMs > 0;
+
+  if (shouldUseCache) {
+    const cached = getCachedResponse<T>(cacheKey);
+    if (cached !== null) {
+      return cached;
+    }
+    const inFlight = inFlightGetRequests.get(cacheKey);
+    if (inFlight) {
+      return inFlight as Promise<T>;
+    }
   }
-  if (res.headers.get("content-type")?.includes("application/json")) {
-    return res.json() as Promise<T>;
+
+  const executeRequest = async (): Promise<T> => {
+    const res = await fetch(url, {
+      ...rest,
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`API ${method} ${path}: ${res.status} ${text}`);
+    }
+
+    const payload = res.headers.get("content-type")?.includes("application/json")
+      ? ((await res.json()) as T)
+      : (undefined as unknown as T);
+
+    if (shouldUseCache) {
+      setCachedResponse(cacheKey, payload, cacheTtlMs);
+    } else if (method !== "GET") {
+      // Mutating requests invalidate cached reads to prevent stale UI.
+      clearRequestCache();
+    }
+
+    return payload;
+  };
+
+  if (!shouldUseCache) {
+    return executeRequest();
   }
-  return undefined as unknown as T;
+
+  const promise = executeRequest()
+    .catch((error) => {
+      const stale = getCachedResponse<T>(cacheKey);
+      if (stale !== null) {
+        return stale;
+      }
+      throw error;
+    })
+    .finally(() => {
+      inFlightGetRequests.delete(cacheKey);
+    });
+
+  inFlightGetRequests.set(cacheKey, promise as Promise<unknown>);
+  return promise;
 }
 
 /** Check if the API is available (e.g. backend running). */
