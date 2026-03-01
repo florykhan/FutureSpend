@@ -68,8 +68,10 @@ export default function HomePage() {
           <section className="relative flex min-h-[calc(100vh-3.5rem)] w-full items-center justify-center px-5 py-24 text-center sm:px-8">
             <ScrollArrow targetId="steps" />
             <div className="flex max-w-3xl flex-col items-center">
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl md:leading-[1.15] md:tracking-[-0.02em] [text-shadow:0_2px_24px_rgba(0,0,0,0.4),0_0_1px_rgba(255,255,255,0.1)]">
-                {TAGLINE}
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl md:leading-[1.15] md:tracking-[-0.02em]">
+                <span className="gradient-text-animate inline-block [filter:drop-shadow(0_2px_24px_rgba(0,0,0,0.4))_drop-shadow(0_0_1px_rgba(255,255,255,0.15))]">
+                  {TAGLINE}
+                </span>
               </h1>
               <p className="mt-7 max-w-xl text-lg leading-[1.7] text-slate-200/95 sm:text-xl [text-shadow:0_1px_12px_rgba(0,0,0,0.3)]">
                 Turn your calendar into a spending forecast. Get insights, stay on budget, and win
@@ -78,14 +80,14 @@ export default function HomePage() {
               <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/dashboard"
-                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl bg-primary-100 px-6 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:bg-primary-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl bg-primary-200 px-6 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:scale-[1.02] hover:bg-primary-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"
                 >
                   <Calendar className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
                   Connect Calendar (mock)
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl border border-white/25 bg-white/[0.07] px-6 text-base font-semibold text-white backdrop-blur-md transition-all duration-200 hover:border-white/40 hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl border border-white/25 bg-white/[0.07] px-6 text-base font-semibold text-white backdrop-blur-md transition-all duration-200 hover:scale-[1.02] hover:border-white/40 hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-slate-900"
                 >
                   <Upload className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
                   Upload Transactions CSV (mock)
@@ -129,7 +131,7 @@ export default function HomePage() {
               <div className="mt-12 flex justify-center">
                 <Link
                   href="/dashboard"
-                  className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-xl bg-primary-100 px-8 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:bg-primary-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-xl bg-primary-200 px-8 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:scale-[1.02] hover:bg-primary-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"
                 >
                   Go to Dashboard
                   <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-0.5" />

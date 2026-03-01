@@ -41,3 +41,37 @@ body {
 .card-shadow-hover:hover {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
 }
+
+/* Animated gradient text for hero header */
+.gradient-text-animate {
+  background: linear-gradient(
+    90deg,
+    #f0f9ff 0%,
+    #e0f2fe 4%,
+    #bae6fd 10%,
+    #7dd3fc 20%,
+    #38bdf8 32%,
+    #0ea5e9 44%,
+    #0284c7 50%,
+    #0ea5e9 56%,
+    #38bdf8 68%,
+    #7dd3fc 80%,
+    #bae6fd 90%,
+    #e0f2fe 96%,
+    #f0f9ff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-text-flow 10s linear infinite;
+}
+
+@keyframes gradient-text-flow {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: 0% center;
+  }
+}
