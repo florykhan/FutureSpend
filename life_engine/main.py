@@ -30,6 +30,8 @@ from parser import parse_calendar_events
 from prediction import predict_spending as run_prediction
 from element_of_game import generate_challenge
 from leaderboard import calculate_leaderboard
+from calendar_fetcher import get_upcoming_events
+from mock_bank import get_balance, get_transactions
 
 app = FastAPI(
     title="FutureSpend",
@@ -110,6 +112,126 @@ def challenge(request: ChallengeRequest):
     }
     game = generate_challenge(request.predicted_total, mock_user_history)
     return game
+
+
+# ── Bank-personalized prediction helper ─────────────────────────────────────
+
+
+def _adjust_prediction_with_bank(prediction: dict, user_id: str = "user_123") -> dict:
+    """
+    Reads recent transactions from mock bank and adjusts predicted spending
+    based on actual recent spending patterns.
+    """
+    txn_resp = get_transactions(user_id, limit=10)
+    bal_resp = get_balance(user_id)
+
+    if not txn_resp.data or not txn_resp.data.get("transactions"):
+        return prediction
+
+    transactions = txn_resp.data["transactions"]
+    balance = bal_resp.data.get("balance", 0) if bal_resp.data else 0
+
+    # Calculate recent daily average from spending transactions
+    spending_txns = [t for t in transactions if t["amount"] < 0]
+    if spending_txns:
+        recent_avg = abs(sum(t["amount"] for t in spending_txns)) / max(len(spending_txns), 1)
+    else:
+        recent_avg = 0
+
+    # Blend: 70% calendar prediction + 30% bank-history average (scaled to same event count)
+    predicted_total = prediction["total_predicted"]
+    bank_adjusted = round(0.7 * predicted_total + 0.3 * (recent_avg * len(prediction.get("breakdown", {}))), 2)
+
+    return {
+        **prediction,
+        "total_predicted": bank_adjusted,
+        "bank_adjusted": True,
+        "bank_balance": balance,
+        "recent_daily_avg": round(recent_avg, 2),
+        "original_total": predicted_total,
+    }
+
+
+# ── Calendar → Parser → Predictor → Challenge (full flow) ──────────────────
+
+
+class AnalyzeRequest(BaseModel):
+    user_id: Optional[str] = "user_123"
+    use_mock: Optional[bool] = True
+    include_bank_data: Optional[bool] = True
+
+
+_MOCK_EVENTS_FOR_ENGINE = [
+    {"title": "Team lunch - Downtown", "location": "Earls Restaurant",
+     "start_time": "2026-03-03T12:00:00", "attendees": 4},
+    {"title": "Coffee with Sarah", "location": "Starbucks",
+     "start_time": "2026-03-03T15:00:00", "attendees": 2},
+    {"title": "Birthday dinner - Alex", "location": "The Keg Steakhouse",
+     "start_time": "2026-03-05T19:00:00", "attendees": 6},
+    {"title": "Uber to office", "location": "",
+     "start_time": "2026-03-06T08:30:00", "attendees": 1},
+    {"title": "Weekend brunch with friends", "location": "OEB Breakfast Co.",
+     "start_time": "2026-03-08T11:00:00", "attendees": 3},
+    {"title": "Movie night", "location": "Cineplex",
+     "start_time": "2026-03-08T19:00:00", "attendees": 2},
+    {"title": "Tim Hortons run", "location": "Tim Hortons",
+     "start_time": "2026-03-04T07:30:00", "attendees": 1},
+    {"title": "Starbucks before class", "location": "Starbucks",
+     "start_time": "2026-03-05T08:00:00", "attendees": 1},
+]
+
+
+@app.post("/calendar/analyze")
+def calendar_analyze(request: AnalyzeRequest):
+    """
+    Full engine pipeline in one call:
+      1. Fetch events (Google Calendar or mock)
+      2. Parse events into features
+      3. Predict spending (optionally adjusted with bank data)
+      4. Generate savings challenge
+      5. Generate leaderboard with mock participants
+
+    Returns all results combined.
+    """
+    # Step 1: Get events
+    if request.use_mock:
+        raw_events = _MOCK_EVENTS_FOR_ENGINE
+    else:
+        raw_events = get_upcoming_events()
+        if not raw_events:
+            raise HTTPException(status_code=502, detail="Could not fetch calendar events")
+
+    # Step 2: Parse
+    features = parse_calendar_events(raw_events)
+
+    # Step 3: Predict
+    prediction = run_prediction(features)
+
+    # Step 3b: Optionally adjust with bank data
+    if request.include_bank_data:
+        prediction = _adjust_prediction_with_bank(prediction, request.user_id)
+
+    # Step 4: Challenge
+    challenge_result = generate_challenge(prediction["total_predicted"])
+
+    # Step 5: Leaderboard (mock participants for demo)
+    mock_participants = [
+        {"name": "You", "spent": prediction["total_predicted"]},
+        {"name": "Emma", "spent": round(prediction["total_predicted"] * 0.8, 2)},
+        {"name": "Liam", "spent": round(prediction["total_predicted"] * 1.1, 2)},
+        {"name": "Olivia", "spent": round(prediction["total_predicted"] * 0.6, 2)},
+    ]
+    leaderboard_result = calculate_leaderboard(
+        mock_participants, challenge_result["target_spending"]
+    )
+
+    return {
+        "events": raw_events,
+        "features": features,
+        "prediction": prediction,
+        "challenge": challenge_result,
+        "leaderboard": leaderboard_result,
+    }
 
 
 # ── Original engine endpoint (preserved) ────────────────────────────────────

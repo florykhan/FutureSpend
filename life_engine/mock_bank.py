@@ -1,4 +1,3 @@
-from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 import random
@@ -24,7 +23,6 @@ class BankResponse(BaseModel):
 
 
 
-@app.get("/api/bank/balance")
 def get_balance(user_id:str="user_123"):
     if user_id not in mock_db:
         mock_db[user_id]={
@@ -40,7 +38,6 @@ def get_balance(user_id:str="user_123"):
     )
 
 
-@app.post("/api/bank/vault/lock")
 def lock_vault(user_id:str="user_123"):
     if user_id not in mock_db:
         mock_db[user_id]={"balance":2500,"vault_locked":False,"transactions":[]}
@@ -53,7 +50,6 @@ def lock_vault(user_id:str="user_123"):
     )
 
 
-@app.post("/api/bank/vault/unlock")
 def unlock_vault(user_id: str="user_123"):
     if user_id not in mock_db:
         mock_db[user_id]={"balance":2500,"vault_locked":False,"transactions":[]}
@@ -66,7 +62,6 @@ def unlock_vault(user_id: str="user_123"):
     )
 
 
-@app.get("/api/bank/transactions")
 def get_transactions(user_id: str="user_123", limit: int=10):
     if user_id not in mock_db:
         mock_db[user_id]={"balance":2500,"vault_locked":False,"transactions":[]}
