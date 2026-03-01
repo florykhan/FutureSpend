@@ -159,27 +159,27 @@ export default function BankingPage() {
   return (
     <PageShell>
       <div
-        className="p-6 lg:p-8 space-y-6 dashboard-typography"
+        className="p-6 lg:p-8 space-y-7 dashboard-typography"
         style={getDashboardTypographyVars() as CSSProperties}
       >
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-up">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-accent-blue/15 rounded-lg flex items-center justify-center">
-              <CreditCard className="w-4.5 h-4.5 text-accent-blue" />
+            <div className="w-11 h-11 bg-accent-blue/15 rounded-lg flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-accent-blue" />
             </div>
             <div>
-              <h2 className="text-gray-100 text-base font-semibold tracking-tight">
+              <h2 className="text-gray-100 text-xl lg:text-2xl font-semibold tracking-tight">
                 RBC Banking
               </h2>
-              <p className="text-xs text-gray-500 font-medium">
+              <p className="text-sm text-gray-500 font-medium">
                 Mock integration · Nomi-enhanced
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 bg-accent-blue-muted border border-accent-blue/20 px-2.5 py-1 rounded-full">
-            <div className="w-1.5 h-1.5 bg-accent-blue rounded-full animate-pulse" />
-            <span className="text-xs text-accent-blue font-medium">
+          <div className="flex items-center gap-2 bg-accent-blue-muted border border-accent-blue/20 px-3 py-1.5 rounded-full">
+            <div className="w-2 h-2 bg-accent-blue rounded-full animate-pulse" />
+            <span className="text-sm text-accent-blue font-medium">
               Live sync
             </span>
           </div>
@@ -187,77 +187,77 @@ export default function BankingPage() {
 
         {/* Balance Cards */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-fade-up"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-up"
           style={{ animationDelay: "60ms" }}
         >
           {/* Total Balance */}
-          <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Wallet className="w-4 h-4 text-gray-500" />
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+          <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <Wallet className="w-5 h-5 text-gray-500" />
+              <p className="text-sm text-gray-500 font-medium uppercase tracking-wider">
                 {bankData.accountName}
               </p>
             </div>
-            <div className="text-2xl font-semibold text-gray-100 font-mono tabular-nums">
+            <div className="text-3xl font-semibold text-gray-100 font-mono tabular-nums">
               $
               {bankData.balance.toLocaleString("en-CA", {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <p className="text-sm text-gray-500 mt-1 font-medium">
+            <p className="text-base text-gray-500 mt-1 font-medium">
               Total Balance
             </p>
-            <div className="mt-3 flex items-center gap-2">
-              <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
+            <div className="mt-4 flex items-center gap-2.5">
+              <div className="flex-1 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent-blue rounded-full progress-bar"
                   style={{ width: `${availPercent}%` }}
                 />
               </div>
-              <span className="text-xs text-gray-400 font-mono font-medium tabular-nums">
+              <span className="text-sm text-gray-400 font-mono font-medium tabular-nums">
                 {availPercent}% free
               </span>
             </div>
           </div>
 
           {/* Available */}
-          <div className="bg-surface-1 border border-white/[0.06] rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 bg-success-muted rounded-md flex items-center justify-center">
-                <LockOpen className="w-3.5 h-3.5 text-success" />
+          <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 bg-success-muted rounded-md flex items-center justify-center">
+                <LockOpen className="w-4 h-4 text-success" />
               </div>
-              <span className="text-sm text-gray-400 font-medium">
+              <span className="text-base text-gray-400 font-medium">
                 Available
               </span>
             </div>
-            <div className="text-2xl text-gray-100 font-semibold font-mono tabular-nums">
+            <div className="text-3xl text-gray-100 font-semibold font-mono tabular-nums">
               $
               {available.toLocaleString("en-CA", {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <p className="text-xs text-gray-500 mt-1 font-medium">
+            <p className="text-sm text-gray-500 mt-1 font-medium">
               Free to spend
             </p>
           </div>
 
           {/* Vault */}
-          <div className="bg-surface-1 border border-white/[0.06] rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 bg-success-muted rounded-md flex items-center justify-center">
-                <Lock className="w-3.5 h-3.5 text-success" />
+          <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 bg-success-muted rounded-md flex items-center justify-center">
+                <Lock className="w-4 h-4 text-success" />
               </div>
-              <span className="text-sm text-gray-400 font-medium">
+              <span className="text-base text-gray-400 font-medium">
                 Savings Vault
               </span>
             </div>
-            <div className="text-2xl text-success font-semibold font-mono tabular-nums">
+            <div className="text-3xl text-success font-semibold font-mono tabular-nums">
               $
               {vaultAmount.toLocaleString("en-CA", {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <p className="text-xs text-gray-500 mt-1 font-medium">
+            <p className="text-sm text-gray-500 mt-1 font-medium">
               Locked for savings
             </p>
           </div>
@@ -265,16 +265,16 @@ export default function BankingPage() {
 
         {/* Main Content */}
         <div
-          className="grid grid-cols-1 lg:grid-cols-3 gap-3 animate-fade-up"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-up"
           style={{ animationDelay: "120ms" }}
         >
           {/* Transactions */}
           <div className="lg:col-span-2 bg-surface-1 border border-white/[0.06] rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
-              <h3 className="text-sm text-gray-200 font-semibold">
+            <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+              <h3 className="text-base text-gray-200 font-semibold">
                 Recent Transactions
               </h3>
-              <span className="text-xs text-gray-600 font-mono">
+              <span className="text-sm text-gray-600 font-mono">
                 Last 8 transactions
               </span>
             </div>
@@ -286,40 +286,40 @@ export default function BankingPage() {
                 return (
                   <div
                     key={tx.id}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors"
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
+                      className="w-10 h-10 rounded-lg flex items-center justify-center text-base flex-shrink-0"
                       style={{ backgroundColor: color + "18" }}
                     >
                       {icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-100 font-medium">
+                      <p className="text-base text-gray-100 font-medium">
                         {tx.merchant}
                       </p>
-                      <p className="text-xs text-gray-600 mt-0.5 font-mono">
+                      <p className="text-sm text-gray-600 mt-0.5 font-mono">
                         {tx.date} · {tx.category}
                       </p>
                     </div>
-                    <div className="text-right flex items-center gap-2.5">
+                    <div className="text-right flex items-center gap-3">
                       <div>
                         <p
-                          className={`text-sm font-semibold font-mono tabular-nums ${
+                          className={`text-base font-semibold font-mono tabular-nums ${
                             isIncome ? "text-success" : "text-gray-100"
                           }`}
                         >
                           {isIncome ? "+" : ""}$
                           {Math.abs(tx.amount).toFixed(2)}
                         </p>
-                        <p className="text-xs text-gray-600 font-mono tabular-nums">
+                        <p className="text-sm text-gray-600 font-mono tabular-nums">
                           bal: ${tx.balance.toFixed(2)}
                         </p>
                       </div>
                       {isIncome ? (
-                        <ArrowDownLeft className="w-3.5 h-3.5 text-success flex-shrink-0" />
+                        <ArrowDownLeft className="w-4 h-4 text-success flex-shrink-0" />
                       ) : (
-                        <ArrowUpRight className="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />
+                        <ArrowUpRight className="w-4 h-4 text-gray-600 flex-shrink-0" />
                       )}
                     </div>
                   </div>
@@ -329,28 +329,28 @@ export default function BankingPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             {/* Vault Card */}
-            <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <ShieldCheck className="w-4 h-4 text-success" />
-                <h3 className="text-gray-100 font-semibold text-sm">
+            <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck className="w-5 h-5 text-success" />
+                <h3 className="text-gray-100 font-semibold text-base">
                   Savings Vault
                 </h3>
               </div>
 
               {showVaultConfirm && (
-                <div className="mb-3 bg-success-muted border border-success/20 rounded-lg p-2.5 text-xs text-success font-medium flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Vault updated
+                <div className="mb-4 bg-success-muted border border-success/20 rounded-lg p-3 text-sm text-success font-medium flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" /> Vault updated
                   successfully!
                 </div>
               )}
 
-              <div className="relative flex justify-center mb-3">
-                <div className="w-24 h-24 relative">
+              <div className="relative flex justify-center mb-4">
+                <div className="w-28 h-28 relative">
                   <svg
                     viewBox="0 0 36 36"
-                    className="w-24 h-24 -rotate-90"
+                    className="w-28 h-28 -rotate-90"
                   >
                     <path
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -368,53 +368,53 @@ export default function BankingPage() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <Lock className="w-3.5 h-3.5 text-success mb-0.5" />
-                    <span className="text-sm text-success font-semibold font-mono">
+                    <Lock className="w-4 h-4 text-success mb-0.5" />
+                    <span className="text-base text-success font-semibold font-mono">
                       {vaultPercent}%
                     </span>
-                    <span className="text-xs text-gray-600 font-medium">
+                    <span className="text-sm text-gray-600 font-medium">
                       locked
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-center mb-3">
-                <p className="text-base text-success font-semibold font-mono tabular-nums">
+              <div className="text-center mb-4">
+                <p className="text-xl text-success font-semibold font-mono tabular-nums">
                   $
                   {vaultAmount.toLocaleString("en-CA", {
                     minimumFractionDigits: 2,
                   })}
                 </p>
-                <p className="text-xs text-gray-500 font-medium">
+                <p className="text-sm text-gray-500 font-medium">
                   locked in vault
                 </p>
               </div>
 
-              <div className="flex gap-2 mb-3">
+              <div className="flex gap-2 mb-4">
                 <button
                   onClick={() =>
                     setVaultMode(vaultMode === "add" ? null : "add")
                   }
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium border transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-base font-medium border transition-all ${
                     vaultMode === "add"
                       ? "bg-success text-white border-success"
                       : "bg-success-muted text-success border-success/20 hover:bg-success/20"
                   }`}
                 >
-                  <Plus className="w-3.5 h-3.5" /> Lock
+                  <Plus className="w-4 h-4" /> Lock
                 </button>
                 <button
                   onClick={() =>
                     setVaultMode(vaultMode === "remove" ? null : "remove")
                   }
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium border transition-all ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-base font-medium border transition-all ${
                     vaultMode === "remove"
                       ? "bg-warning text-white border-warning"
                       : "bg-warning-muted text-warning border-warning/20 hover:bg-warning/20"
                   }`}
                 >
-                  <Minus className="w-3.5 h-3.5" /> Unlock
+                  <Minus className="w-4 h-4" /> Unlock
                 </button>
               </div>
 
@@ -425,11 +425,11 @@ export default function BankingPage() {
                     value={vaultInput}
                     onChange={(e) => setVaultInput(e.target.value)}
                     placeholder="Amount"
-                    className="flex-1 border border-white/[0.08] bg-surface-3 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-blue/40 font-mono"
+                    className="flex-1 border border-white/[0.08] bg-surface-3 rounded-lg px-3 py-2.5 text-base text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-blue/40 font-mono"
                   />
                   <button
                     onClick={() => handleVaultChange(vaultMode)}
-                    className="px-4 py-2 bg-accent-blue text-white rounded-lg text-sm font-semibold hover:bg-accent-blue/80 transition-colors"
+                    className="px-4 py-2.5 bg-accent-blue text-white rounded-lg text-base font-semibold hover:bg-accent-blue/80 transition-colors"
                   >
                     Apply
                   </button>
@@ -438,29 +438,29 @@ export default function BankingPage() {
             </div>
 
             {/* Nomi Insights */}
-            <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-4">
+            <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
               <div className="flex items-center gap-2 mb-1">
-                <ChartBar className="w-4 h-4 text-accent-blue" />
-                <h3 className="text-gray-100 font-semibold text-sm">
+                <ChartBar className="w-5 h-5 text-accent-blue" />
+                <h3 className="text-gray-100 font-semibold text-base">
                   Nomi Insights
                 </h3>
               </div>
-              <p className="text-xs text-gray-600 mb-3 font-medium">
+              <p className="text-sm text-gray-600 mb-4 font-medium">
                 This month vs last month
               </p>
-              <ResponsiveContainer width="100%" height={130}>
+              <ResponsiveContainer width="100%" height={170}>
                 <BarChart
                   data={nomiChartData}
                   margin={{ top: 0, right: 0, left: -25, bottom: 0 }}
                 >
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 9, fill: "#71717a", fontWeight: 500 }}
+                    tick={{ fontSize: 11, fill: "#71717a", fontWeight: 500 }}
                     axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 9, fill: "#71717a" }}
+                    tick={{ fontSize: 11, fill: "#71717a" }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -482,23 +482,23 @@ export default function BankingPage() {
                   />
                 </BarChart>
               </ResponsiveContainer>
-              <div className="mt-3 space-y-2">
+              <div className="mt-4 space-y-2.5">
                 {bankData.nomiInsights.map((insight) => (
                   <div
                     key={insight.category}
                     className="flex items-center justify-between"
                   >
-                    <span className="text-xs text-gray-400 font-medium">
+                    <span className="text-sm text-gray-400 font-medium">
                       {insight.category}
                     </span>
                     <div className="flex items-center gap-1.5">
                       {insight.trend === "down" ? (
-                        <TrendDown className="w-3 h-3 text-success" />
+                        <TrendDown className="w-3.5 h-3.5 text-success" />
                       ) : (
-                        <TrendUp className="w-3 h-3 text-destructive" />
+                        <TrendUp className="w-3.5 h-3.5 text-destructive" />
                       )}
                       <span
-                        className={`text-xs font-semibold font-mono tabular-nums ${
+                        className={`text-sm font-semibold font-mono tabular-nums ${
                           insight.trend === "down"
                             ? "text-success"
                             : "text-destructive"

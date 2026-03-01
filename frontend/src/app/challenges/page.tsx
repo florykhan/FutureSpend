@@ -150,20 +150,20 @@ export default function ChallengesPage() {
   return (
     <PageShell>
       <div
-        className="p-6 lg:p-8 space-y-6 dashboard-typography"
+        className="p-6 lg:p-8 space-y-7 dashboard-typography"
         style={getDashboardTypographyVars() as CSSProperties}
       >
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4 animate-fade-up">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-accent-purple/20 rounded-xl flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-accent-purple" />
+            <div className="w-12 h-12 bg-accent-purple/20 rounded-xl flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-accent-purple" />
             </div>
             <div>
-              <h2 className="text-white text-lg font-semibold tracking-tight">
+              <h2 className="text-white text-xl lg:text-2xl font-semibold tracking-tight">
                 Savings Challenges
               </h2>
-              <p className="text-sm text-gray-500 font-normal">
+              <p className="text-base text-gray-500 font-normal">
                 Gamified goals to keep your spending on track
               </p>
             </div>
@@ -171,15 +171,15 @@ export default function ChallengesPage() {
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-accent-blue text-white px-4 py-2 rounded-lg hover:bg-accent-blue/80 transition-colors text-sm font-semibold"
+            className="flex items-center gap-2 bg-accent-blue text-white px-5 py-2.5 rounded-lg hover:bg-accent-blue/80 transition-colors text-base font-semibold"
           >
-            <Plus className="w-4 h-4" /> New Challenge
+            <Plus className="w-4.5 h-4.5" /> New Challenge
           </button>
         </div>
 
         {/* Stats */}
         <div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-up"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-up"
           style={{ animationDelay: "60ms" }}
         >
           {[
@@ -189,14 +189,14 @@ export default function ChallengesPage() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="bg-surface-1 border border-white/[0.06] rounded-xl p-4 flex items-center gap-3"
+              className="bg-surface-1 border border-white/[0.06] rounded-xl p-5 flex items-center gap-4"
             >
-              <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center`}>
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-xl font-semibold text-white font-mono tabular-nums">{stat.value}</p>
-                <p className="text-xs text-gray-500 font-medium">{stat.label}</p>
+                <p className="text-2xl font-semibold text-white font-mono tabular-nums">{stat.value}</p>
+                <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
               </div>
             </div>
           ))}
@@ -204,11 +204,11 @@ export default function ChallengesPage() {
 
         {/* Active Challenges */}
         <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
-          <h3 className="text-gray-200 text-base font-medium mb-3 flex items-center gap-2">
-            <Fire className="w-4 h-4 text-warning" />
+          <h3 className="text-gray-200 text-lg font-medium mb-4 flex items-center gap-2">
+            <Fire className="w-5 h-5 text-warning" />
             Active Challenges
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeList.map((challenge) => {
               const current = challenge.progress ?? 0;
               const target = challenge.goal;
@@ -226,15 +226,15 @@ export default function ChallengesPage() {
               return (
                 <div
                   key={challenge.id}
-                  className="bg-surface-1 border border-white/[0.06] rounded-xl p-4"
+                  className="bg-surface-1 border border-white/[0.06] rounded-xl p-5"
                 >
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-between mb-5">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Trophy className="w-4 h-4 text-accent-purple" />
-                        <h3 className="text-gray-100 font-semibold text-sm">{challenge.name}</h3>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Trophy className="w-5 h-5 text-accent-purple" />
+                        <h3 className="text-gray-100 font-semibold text-base">{challenge.name}</h3>
                       </div>
-                      <p className="text-xs text-gray-500 font-normal">
+                      <p className="text-sm text-gray-500 font-normal">
                         {challenge.description ?? `Target: ${challenge.goal} ${challenge.unit}`}
                       </p>
                     </div>
@@ -242,28 +242,28 @@ export default function ChallengesPage() {
                       <ProgressRing
                         value={current}
                         max={target}
-                        size={72}
-                        stroke={7}
+                        size={88}
+                        stroke={8}
                         color={ringColor}
                       />
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-xs font-semibold text-white">{pct}%</span>
-                        <span className="text-gray-500" style={{ fontSize: "9px" }}>
+                        <span className="text-sm font-semibold text-white">{pct}%</span>
+                        <span className="text-gray-500 text-xs">
                           used
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-sm">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-base">
                       <span className="text-gray-400 font-medium">Spent</span>
                       <span className="font-semibold text-white font-mono tabular-nums">${current}</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-base">
                       <span className="text-gray-400 font-medium">Target</span>
                       <span className="font-semibold text-white font-mono tabular-nums">${target}</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-base">
                       <span className="text-gray-400 font-medium">Remaining</span>
                       <span
                         className={`font-semibold font-mono tabular-nums ${remaining > 0 ? "text-success" : "text-destructive"}`}
@@ -272,16 +272,16 @@ export default function ChallengesPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                  <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-gray-500" />
-                      <span className="text-xs text-gray-500 font-normal">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-500 font-normal">
                         {daysLeft > 0 ? `${daysLeft}d left` : "Ends soon"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Star className="w-3.5 h-3.5 text-warning-strong fill-warning-strong" />
-                      <span className="text-xs text-warning-strong font-semibold">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-warning-strong fill-warning-strong" />
+                      <span className="text-sm text-warning-strong font-semibold">
                         Earn {challenge.streak ? challenge.streak * 100 : 400} pts
                       </span>
                     </div>
@@ -294,8 +294,8 @@ export default function ChallengesPage() {
 
         {/* Challenge History */}
         <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
-          <h3 className="text-gray-200 text-base font-medium mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-500" />
+          <h3 className="text-gray-200 text-lg font-medium mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-gray-500" />
             Challenge History
           </h3>
           <div className="bg-surface-1 border border-white/[0.06] rounded-xl overflow-hidden">
@@ -303,34 +303,34 @@ export default function ChallengesPage() {
               {pastChallenges.map((challenge) => (
                 <div
                   key={challenge.id}
-                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.02] transition-colors"
+                  className="flex items-center gap-4 px-5 py-4.5 hover:bg-white/[0.02] transition-colors"
                 >
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                       challenge.status === "won" ? "bg-success-muted" : "bg-destructive-muted"
                     }`}
                   >
                     {challenge.status === "won" ? (
-                      <CheckCircle className="w-5 h-5 text-success" />
+                      <CheckCircle className="w-5.5 h-5.5 text-success" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-destructive" />
+                      <XCircle className="w-5.5 h-5.5 text-destructive" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-100">{challenge.name}</p>
-                    <p className="text-xs text-gray-600 font-mono">{challenge.month}</p>
+                    <p className="text-base font-medium text-gray-100">{challenge.name}</p>
+                    <p className="text-sm text-gray-600 font-mono">{challenge.month}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-200 font-semibold font-mono tabular-nums">
+                    <p className="text-base text-gray-200 font-semibold font-mono tabular-nums">
                       ${challenge.actual} <span className="text-gray-600">/ ${challenge.target}</span>
                     </p>
                     {challenge.status === "won" ? (
-                      <div className="flex items-center gap-1 justify-end">
-                        <Star className="w-3 h-3 text-warning-strong fill-warning-strong" />
-                        <span className="text-xs text-warning-strong font-semibold">+{challenge.reward} pts</span>
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <Star className="w-3.5 h-3.5 text-warning-strong fill-warning-strong" />
+                        <span className="text-sm text-warning-strong font-semibold">+{challenge.reward} pts</span>
                       </div>
                     ) : (
-                      <span className="text-xs text-destructive font-normal">
+                      <span className="text-sm text-destructive font-normal">
                         Over by ${challenge.actual - challenge.target}
                       </span>
                     )}
