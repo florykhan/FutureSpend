@@ -24,14 +24,20 @@ export function Navbar() {
           href="/"
           className="flex shrink-0 items-center gap-3 font-semibold"
         >
-          <div className="flex-shrink-0 w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-accent-blue shadow-[0_2px_12px_rgba(46,144,250,0.4)]">
             <Lightning size={18} weight="fill" className="text-white" />
           </div>
           <div>
-            <p className={cn("text-sm", isHome ? "text-primary-400" : "text-slate-900")} style={{ lineHeight: "1.2" }}>
+            <p
+              className={cn("text-sm font-semibold", isHome ? "text-white" : "text-slate-900")}
+              style={{ lineHeight: "1.2" }}
+            >
               {APP_NAME}
             </p>
-            <p className={cn("text-xs", isHome ? "text-slate-400" : "text-slate-500")} style={{ lineHeight: "1.2" }}>
+            <p
+              className={cn("text-xs", isHome ? "text-white/70" : "text-slate-500")}
+              style={{ lineHeight: "1.2" }}
+            >
               Finance
             </p>
           </div>
@@ -39,7 +45,12 @@ export function Navbar() {
         <nav className="flex min-w-0 flex-1 justify-end">
           <Link
             href="/dashboard"
-            className="whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-primary-600 text-white hover:bg-primary-700"
+            className={cn(
+              "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2",
+              isHome
+                ? "border border-white/20 bg-white/10 text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-sm hover:scale-[1.02] hover:border-white/30 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] focus:ring-white/40 focus:ring-offset-slate-900"
+                : "bg-slate-800 text-white shadow-sm hover:bg-slate-700 focus:ring-accent-blue focus:ring-offset-white"
+            )}
           >
             Getting Started
           </Link>

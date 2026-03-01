@@ -5,6 +5,8 @@ import { ScrollArrow } from "@/components/landing/ScrollArrow";
 import { HeroLockup } from "@/components/landing/HeroLockup";
 import { APP_NAME, TAGLINE } from "@/lib/constants";
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const STEPS = [
   {
     title: "Connect your calendars",
@@ -37,6 +39,16 @@ export default function HomePage() {
           }}
           aria-hidden
         >
+          {/* Fallback gradient when video is missing or fails (e.g. on GitHub Pages) */}
+          <div
+            className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950"
+            style={{
+              backgroundImage:
+                "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(15, 23, 42, 0.9), transparent 50%), radial-gradient(ellipse 80% 70% at 50% 50%, rgba(16, 185, 129, 0.08), transparent 65%)",
+            }}
+            aria-hidden
+          />
+          {/* Base path required for GitHub Pages (site is at /FutureSpend/) */}
           <video
             autoPlay
             loop
@@ -52,7 +64,7 @@ export default function HomePage() {
               objectPosition: "center",
             }}
           >
-            <source src="/background.mov" type="video/quicktime" />
+            <source src={`${BASE_PATH}/background.mov`} type="video/quicktime" />
           </video>
           <div className="absolute inset-0 bg-slate-900/55" />
           <div
@@ -105,14 +117,14 @@ export default function HomePage() {
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/dashboard"
-                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl bg-primary-200 px-6 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:scale-[1.02] hover:bg-primary-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl border border-white/20 bg-white/10 px-6 text-base font-semibold text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] hover:border-white/30 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-slate-900"
                 >
                   <CalendarBlank size={22} weight="bold" className="transition-transform duration-200 group-hover:scale-105" />
                   Connect Calendar (mock)
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl border border-white/25 bg-white/[0.07] px-6 text-base font-semibold text-white backdrop-blur-md transition-all duration-200 hover:scale-[1.02] hover:border-white/40 hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl border border-white/20 bg-white/10 px-6 text-base font-semibold text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] hover:border-white/30 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-slate-900"
                 >
                   <UploadSimple size={22} weight="bold" className="transition-transform duration-200 group-hover:scale-105" />
                   Upload Transactions CSV (mock)
@@ -139,7 +151,7 @@ export default function HomePage() {
                     key={i}
                     className="group flex items-start gap-4 rounded-xl border border-white/[0.08] bg-white/[0.04] p-5 backdrop-blur-xl transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.08] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] sm:p-6"
                   >
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500/25 to-primary-600/15 text-base font-bold text-primary-200 shadow-inner">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/15 text-base font-bold text-white shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
                       {i + 1}
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
@@ -153,7 +165,7 @@ export default function HomePage() {
               <div className="mt-8 flex justify-center">
                 <Link
                   href="/dashboard"
-                  className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-xl bg-primary-200 px-8 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:scale-[1.02] hover:bg-primary-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-xl border border-white/20 bg-white/10 px-8 text-base font-semibold text-white shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200 hover:scale-[1.02] hover:border-white/30 hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] focus:outline-none focus:ring-2 focus:ring-white/40 focus:ring-offset-2 focus:ring-offset-slate-900"
                 >
                   Go to Dashboard
                   <ArrowRight size={22} weight="bold" className="transition-transform duration-200 group-hover:translate-x-0.5" />

@@ -14,6 +14,7 @@ import {
   TrendUp,
   Bank,
   Medal,
+  Lightning,
 } from "@phosphor-icons/react";
 import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -45,18 +46,26 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         collapsed ? "w-16" : "w-56"
       )}
     >
-      {/* Logo */}
+      {/* Logo — same as navbar */}
       <Link
-        href="/dashboard"
-        className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.06]"
+        href="/"
+        className={cn(
+          "flex items-center border-b border-white/[0.06]",
+          collapsed ? "justify-center px-0 py-5" : "gap-3 px-4 py-5"
+        )}
       >
-        <div className="flex-shrink-0 w-7 h-7 rounded-md bg-white/[0.08] flex items-center justify-center">
-          <span className="text-sm font-semibold text-white">F</span>
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-accent-blue shadow-[0_2px_12px_rgba(46,144,250,0.4)]">
+          <Lightning size={18} weight="fill" className="text-white" />
         </div>
         {!collapsed && (
-          <span className="text-base font-bold text-zinc-100 tracking-tight">
-            {APP_NAME}
-          </span>
+          <div>
+            <p className="text-sm font-semibold text-white" style={{ lineHeight: "1.2" }}>
+              {APP_NAME}
+            </p>
+            <p className="text-xs text-white/70" style={{ lineHeight: "1.2" }}>
+              Finance
+            </p>
+          </div>
         )}
       </Link>
 
