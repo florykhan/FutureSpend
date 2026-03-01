@@ -1,0 +1,36 @@
+{
+  "spendingPrediction": {
+    "total": 417,
+    "confidence": 0.82,
+    "lastWeekActual": 391,
+    "breakdown": {
+      "food": 243,
+      "entertainment": 137,
+      "transport": 37,
+      "other": 37
+    }
+  },
+  "whatIfScenarios": [
+    {
+      "id": "s1",
+      "label": "Skip Birthday dinner - Alex",
+      "eventId": "evt-4",
+      "savings": 85,
+      "newTotal": 332
+    },
+    {
+      "id": "s2",
+      "label": "Skip Uber to office",
+      "eventId": "evt-5",
+      "savings": 22,
+      "newTotal": 395
+    },
+    {
+      "id": "s3",
+      "label": "Skip Weekend brunch with friends",
+      "eventId": "evt-6",
+      "savings": 45,
+      "newTotal": 372
+    }
+  ]
+}

@@ -102,7 +102,7 @@ export default function HomePage() {
                 Turn your calendar into a spending forecast. Get insights, stay on budget, and win
                 challenges with friends.
               </p>
-              <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/dashboard"
                   className="group inline-flex h-12 min-w-[180px] items-center justify-center gap-2.5 rounded-xl bg-primary-200 px-6 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:scale-[1.02] hover:bg-primary-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"
@@ -122,35 +122,35 @@ export default function HomePage() {
           </section>
 
           {/* Steps — premium glass panel */}
-          <section id="steps" className="scroll-mt-20 px-4 py-20 sm:px-6">
+          <section id="steps" className="scroll-mt-20 px-4 py-14 sm:px-6 sm:py-16">
             <div className="mx-auto max-w-3xl">
               <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                 How it works
               </p>
-              <h2 className="mt-4 text-center text-2xl font-bold tracking-tight text-white sm:text-3xl md:tracking-[-0.02em]">
+              <h2 className="mt-3 text-center text-xl font-bold tracking-tight text-white sm:text-2xl md:tracking-[-0.02em]">
                 Get started in 3 steps
               </h2>
-              <p className="mt-3 text-center text-sm leading-relaxed text-slate-400">
+              <p className="mt-2 text-center text-sm leading-relaxed text-slate-400">
                 Set up once and see your spending forecast.
               </p>
-              <div className="mt-12 grid gap-4 sm:gap-5">
+              <div className="mt-8 grid gap-3 sm:gap-4">
                 {STEPS.map((step, i) => (
                   <div
                     key={i}
-                    className="group flex items-start gap-5 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-6 backdrop-blur-xl transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.08] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] sm:p-7"
+                    className="group flex items-start gap-4 rounded-xl border border-white/[0.08] bg-white/[0.04] p-5 backdrop-blur-xl transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.08] hover:shadow-[0_8px_32px_rgba(0,0,0,0.2)] sm:p-6"
                   >
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/25 to-primary-600/15 text-lg font-bold text-primary-200 shadow-inner">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500/25 to-primary-600/15 text-base font-bold text-primary-200 shadow-inner">
                       {i + 1}
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <h3 className="font-semibold text-white">{step.title}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-400">{step.body}</p>
+                      <h3 className="text-sm font-semibold text-white sm:text-base">{step.title}</h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-slate-400 sm:text-sm">{step.body}</p>
                     </div>
-                    <CheckCircle2 className="h-6 w-6 flex-shrink-0 text-primary-400/90" />
+                    <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary-400/90" />
                   </div>
                 ))}
               </div>
-              <div className="mt-12 flex justify-center">
+              <div className="mt-8 flex justify-center">
                 <Link
                   href="/dashboard"
                   className="group inline-flex h-12 items-center justify-center gap-2.5 rounded-xl bg-primary-200 px-8 text-base font-semibold text-primary-900 shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all duration-200 hover:scale-[1.02] hover:bg-primary-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.25)] focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-slate-900"

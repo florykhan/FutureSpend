@@ -1,0 +1,22 @@
+{
+  "accountName": "RBC Advantage Banking",
+  "balance": 4820.5,
+  "vaultAmount": 1200.0,
+  "availableBalance": 3620.5,
+  "transactions": [
+    { "id": "t1", "date": "2026-03-01", "merchant": "Starbucks", "category": "coffee", "amount": -6.85, "balance": 4820.5 },
+    { "id": "t2", "date": "2026-03-01", "merchant": "Uber", "category": "transport", "amount": -12.4, "balance": 4827.35 },
+    { "id": "t3", "date": "2026-02-28", "merchant": "Whole Foods", "category": "groceries", "amount": -64.22, "balance": 4839.75 },
+    { "id": "t4", "date": "2026-02-28", "merchant": "Salary Deposit", "category": "income", "amount": 3200.0, "balance": 4903.97 },
+    { "id": "t5", "date": "2026-02-27", "merchant": "Netflix", "category": "entertainment", "amount": -18.99, "balance": 1703.97 },
+    { "id": "t6", "date": "2026-02-27", "merchant": "Chipotle", "category": "meal", "amount": -14.5, "balance": 1722.96 },
+    { "id": "t7", "date": "2026-02-26", "merchant": "TTC Transit", "category": "transport", "amount": -3.35, "balance": 1737.46 },
+    { "id": "t8", "date": "2026-02-26", "merchant": "Cineplex", "category": "entertainment", "amount": -28.0, "balance": 1740.81 }
+  ],
+  "nomiInsights": [
+    { "category": "Dining Out", "thisMonth": 243, "lastMonth": 318, "trend": "down", "change": -24 },
+    { "category": "Entertainment", "thisMonth": 137, "lastMonth": 95, "trend": "up", "change": 44 },
+    { "category": "Transport", "thisMonth": 87, "lastMonth": 102, "trend": "down", "change": -15 },
+    { "category": "Groceries", "thisMonth": 180, "lastMonth": 165, "trend": "up", "change": 15 }
+  ]
+}
