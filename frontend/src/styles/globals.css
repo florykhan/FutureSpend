@@ -1,21 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --border: #e2e8f0;
-}
+  --bg-primary: #0a0a0b;
+  --bg-secondary: #111113;
+  --bg-tertiary: #18181b;
+  --bg-elevated: #1c1c1f;
+  --bg-hover: #232326;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-    --card: #1e293b;
-    --border: #334155;
-  }
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --text-muted: #52525b;
+
+  --accent: #e4e4e7;
+  --accent-green: #22c55e;
+  --accent-green-muted: rgba(34, 197, 94, 0.12);
+  --accent-red: #ef4444;
+  --accent-red-muted: rgba(239, 68, 68, 0.12);
+  --accent-blue: #60a5fa;
+  --accent-blue-muted: rgba(96, 165, 250, 0.1);
+  --accent-amber: #fbbf24;
+  --accent-amber-muted: rgba(251, 191, 36, 0.1);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 html {
@@ -25,24 +45,79 @@ html {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--text-primary);
+  background: var(--bg-primary);
   margin: 0;
   padding: 0;
   min-width: 100%;
   overflow-x: hidden;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
 }
 
-/* Fintech-style card shadows */
-.card-shadow {
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+/* ── Card system ── */
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.2s ease;
+}
+.card:hover {
+  border-color: var(--border-default);
 }
 
-.card-shadow-hover:hover {
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+/* ── Monospace numbers ── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
 }
 
-/* Animated gradient text for hero header */
+/* ── Subtle noise texture overlay ── */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── Recharts overrides for dark theme ── */
+.recharts-cartesian-grid line {
+  stroke: var(--border-subtle) !important;
+}
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
+}
+.recharts-tooltip-item {
+  color: var(--text-secondary) !important;
+}
+.recharts-tooltip-label {
+  color: var(--text-primary) !important;
+}
+
+/* ── Animated gradient text for hero header ── */
 .gradient-text-animate {
   background: linear-gradient(
     90deg,
@@ -68,15 +143,11 @@ body {
 }
 
 @keyframes gradient-text-flow {
-  0% {
-    background-position: 200% center;
-  }
-  100% {
-    background-position: 0% center;
-  }
+  0% { background-position: 200% center; }
+  100% { background-position: 0% center; }
 }
 
-/* Hero lockup box: single continuous line draws around the frame */
+/* ── Hero lockup box ── */
 .hero-lockup-box {
   --box-duration: 4s;
   --box-ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,12 +157,8 @@ body {
   animation-delay: var(--box-duration);
 }
 @keyframes hero-lockup-grow {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.03);
-  }
+  from { transform: scale(1); }
+  to { transform: scale(1.03); }
 }
 .hero-box-bg {
   position: absolute;
@@ -105,11 +172,7 @@ body {
   animation: hero-box-bg-in 0.5s ease-out forwards;
   animation-delay: var(--box-duration);
 }
-@keyframes hero-box-bg-in {
-  to {
-    opacity: 1;
-  }
-}
+@keyframes hero-box-bg-in { to { opacity: 1; } }
 .hero-box-svg {
   position: absolute;
   inset: 0;
@@ -122,13 +185,7 @@ body {
   stroke-dashoffset: var(--box-path-length);
   animation: hero-box-draw var(--box-duration) var(--box-ease) forwards;
 }
-@keyframes hero-box-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Already-seen state: show final frame with no animation (same session) */
+@keyframes hero-box-draw { to { stroke-dashoffset: 0; } }
 .hero-lockup-seen {
   animation: none;
   transform: scale(1.03);
@@ -141,4 +198,19 @@ body {
   animation: none;
   animation-delay: 0s;
   opacity: 1;
+}
+
+/* ── Entrance animations ── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.4s ease-out both;
 }

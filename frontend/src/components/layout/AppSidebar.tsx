@@ -10,7 +10,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Zap,
   Home,
   TrendingUp,
   Landmark,
@@ -42,32 +41,27 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   return (
     <aside
       className={cn(
-        "relative flex flex-col bg-slate-900 text-white transition-all duration-300 flex-shrink-0",
-        collapsed ? "w-16" : "w-60"
+        "relative flex flex-col bg-surface-0 border-r border-white/[0.06] transition-all duration-300 flex-shrink-0",
+        collapsed ? "w-16" : "w-56"
       )}
     >
       {/* Logo */}
       <Link
         href="/dashboard"
-        className="flex items-center gap-3 px-4 py-5 border-b border-slate-700/50"
+        className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.06]"
       >
-        <div className="flex-shrink-0 w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-          <Zap className="w-4 h-4 text-white" strokeWidth={2.5} />
+        <div className="flex-shrink-0 w-7 h-7 rounded-md bg-white/[0.08] flex items-center justify-center">
+          <span className="text-sm font-bold text-white">F</span>
         </div>
         {!collapsed && (
-          <div>
-            <p className="text-sm text-primary-400" style={{ lineHeight: "1.2" }}>
-              {APP_NAME}
-            </p>
-            <p className="text-xs text-slate-400" style={{ lineHeight: "1.2" }}>
-              Finance
-            </p>
-          </div>
+          <span className="text-[13px] font-bold text-zinc-100 tracking-tight">
+            {APP_NAME}
+          </span>
         )}
       </Link>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
+      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
           const isActive =
             pathname === href || (href !== "/" && href !== "/dashboard" && pathname.startsWith(href));
@@ -76,15 +70,15 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               key={href}
               href={href}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-left",
+                "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors duration-150",
                 isActive
-                  ? "bg-primary-600 text-white"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-white/[0.08] text-zinc-100 font-semibold"
+                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] font-medium"
               )}
               title={collapsed ? label : undefined}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm truncate">{label}</span>}
+              <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={1.8} aria-hidden="true" />
+              {!collapsed && <span className="truncate">{label}</span>}
             </Link>
           );
         })}
@@ -94,13 +88,13 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       <button
         type="button"
         onClick={onToggle}
-        className="absolute -right-3 top-16 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors z-10"
+        className="absolute -right-3 top-16 w-6 h-6 bg-surface-2 border border-white/[0.08] rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors z-10 focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-1 focus-visible:ring-offset-surface-0"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {collapsed ? (
-          <ChevronRight className="w-3 h-3" />
+          <ChevronRight className="w-3 h-3" aria-hidden="true" />
         ) : (
-          <ChevronLeft className="w-3 h-3" />
+          <ChevronLeft className="w-3 h-3" aria-hidden="true" />
         )}
       </button>
     </aside>

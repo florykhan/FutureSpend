@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   Cell,
@@ -14,7 +13,6 @@ import {
 import {
   TrendingUp,
   TrendingDown,
-  Zap,
   CheckCircle,
   XCircle,
   ArrowRight,
@@ -28,13 +26,13 @@ import eventsData from "@/mocks/events.json";
 import predictionsData from "@/mocks/predictions.json";
 
 const categoryColors: Record<string, string> = {
-  food: "#3b82f6",
-  meal: "#3b82f6",
-  entertainment: "#f59e0b",
-  transport: "#10b981",
-  coffee: "#8b5cf6",
-  health: "#06b6d4",
-  other: "#6b7280",
+  food: "#60a5fa",
+  meal: "#60a5fa",
+  entertainment: "#fbbf24",
+  transport: "#34d399",
+  coffee: "#a78bfa",
+  health: "#38bdf8",
+  other: "#71717a",
 };
 
 type EventRow = {
@@ -55,11 +53,11 @@ function toEventRow(evt: EventInput): EventRow {
   return {
     id: evt.id,
     title: evt.title,
-    date: start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
-    time: start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+    date: new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(start),
+    time: new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(start),
     predictedSpend: evt.predictedSpend ?? 0,
     category: evt.category || "other",
-    color: categoryColors[evt.category as keyof typeof categoryColors] || "#6b7280",
+    color: categoryColors[evt.category as keyof typeof categoryColors] || "#71717a",
     calendar: evt.calendarType || "other",
   };
 }
@@ -67,10 +65,10 @@ function toEventRow(evt: EventInput): EventRow {
 const fallbackEvents = (eventsData as EventInput[]).map(toEventRow);
 const fallbackPrediction = predictionsData.spendingPrediction;
 const fallbackBreakdown = [
-  { name: "Food", value: fallbackPrediction.breakdown.food, color: "#3b82f6" },
-  { name: "Entertainment", value: fallbackPrediction.breakdown.entertainment, color: "#f59e0b" },
-  { name: "Transport", value: fallbackPrediction.breakdown.transport, color: "#10b981" },
-  { name: "Other", value: fallbackPrediction.breakdown.other, color: "#6b7280" },
+  { name: "Food", value: fallbackPrediction.breakdown.food, color: "#60a5fa" },
+  { name: "Entertainment", value: fallbackPrediction.breakdown.entertainment, color: "#fbbf24" },
+  { name: "Transport", value: fallbackPrediction.breakdown.transport, color: "#34d399" },
+  { name: "Other", value: fallbackPrediction.breakdown.other, color: "#71717a" },
 ];
 
 export default function PredictionsPage() {
@@ -90,7 +88,7 @@ export default function PredictionsPage() {
       .getDashboard()
       .then((data) => {
         if (data.events?.length) {
-          const rows = data.events.map((e) =>
+          const rows = data.events.map((e: EventInput) =>
             toEventRow({
               id: e.id,
               title: e.title,
@@ -123,7 +121,7 @@ export default function PredictionsPage() {
               ? breakdown.map((c: { name: string; value: number }) => ({
                   name: c.name,
                   value: c.value,
-                  color: categoryColors[c.name.toLowerCase()] ?? "#6b7280",
+                  color: categoryColors[c.name.toLowerCase()] ?? "#71717a",
                 }))
               : fallbackBreakdown
           );
@@ -160,7 +158,11 @@ export default function PredictionsPage() {
       });
     } else {
       setActiveScenario(scenarioId);
-      setSkippedEvents((prev) => new Set([...prev, scenario.eventId]));
+      setSkippedEvents((prev) => {
+        const next = new Set(prev);
+        next.add(scenario.eventId);
+        return next;
+      });
     }
   };
 
@@ -172,8 +174,8 @@ export default function PredictionsPage() {
   if (loading) {
     return (
       <PageShell>
-        <div className="p-6 flex items-center justify-center min-h-[200px]">
-          <p className="text-slate-500">Loading predictions...</p>
+        <div className="p-8 flex items-center justify-center min-h-[200px]">
+          <p className="text-zinc-500 text-sm">Loading&hellip;</p>
         </div>
       </PageShell>
     );
@@ -181,100 +183,111 @@ export default function PredictionsPage() {
 
   return (
     <PageShell>
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-5 text-white">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4" />
-              <span className="text-sm text-blue-200">AI Prediction</span>
+      <div className="p-6 lg:p-8 space-y-6">
+        {/* Top Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-fade-up">
+          {/* AI Prediction */}
+          <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
+              <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold">AI Prediction</span>
             </div>
-            <div className="text-3xl mb-1 font-bold">${spendingPrediction.total}</div>
-            <p className="text-sm text-blue-200">Original weekly estimate</p>
-            <div className="mt-3 flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-blue-500 rounded-full overflow-hidden">
+            <div className="text-3xl font-bold text-white font-mono tabular-nums">${spendingPrediction.total}</div>
+            <p className="text-[12px] text-zinc-400 mt-1 font-medium">Original weekly estimate</p>
+            <div className="mt-4 flex items-center gap-2.5">
+              <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-white rounded-full"
+                  className="h-full bg-zinc-400 rounded-full"
                   style={{ width: `${Math.round(spendingPrediction.confidence * 100)}%` }}
                 />
               </div>
-              <span className="text-xs text-blue-200">{Math.round(spendingPrediction.confidence * 100)}% confidence</span>
+              <span className="text-[11px] text-zinc-500 font-mono tabular-nums">{Math.round(spendingPrediction.confidence * 100)}%</span>
             </div>
           </div>
 
-          <div className={`rounded-xl p-5 border shadow-sm ${savings > 0 ? "bg-emerald-50 border-emerald-200" : "bg-white border-slate-200"}`}>
-            <div className="flex items-center gap-2 mb-2">
-              <RefreshCw className="w-4 h-4 text-emerald-600" />
-              <span className="text-sm text-slate-600">What-If Total</span>
+          {/* What-If Total */}
+          <div className={`rounded-xl p-5 border ${savings > 0 ? "bg-green-500/[0.06] border-green-500/[0.12]" : "bg-surface-1 border-white/[0.06]"}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <RefreshCw className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
+              <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold">What-If Total</span>
             </div>
-            <div className={`text-3xl mb-1 font-bold ${savings > 0 ? "text-emerald-700" : "text-slate-900"}`}>${currentTotal}</div>
-            <p className="text-sm text-slate-500">With your modifications</p>
+            <div className={`text-3xl font-bold font-mono tabular-nums ${savings > 0 ? "text-green-400" : "text-zinc-100"}`}>${currentTotal}</div>
+            <p className="text-[12px] text-zinc-400 mt-1 font-medium">With your modifications</p>
             {savings > 0 && (
-              <div className="mt-2 flex items-center gap-1.5">
-                <TrendingDown className="w-4 h-4 text-emerald-600" />
-                <span className="text-sm text-emerald-700 font-medium">Saving ${savings}!</span>
+              <div className="mt-3 flex items-center gap-1.5">
+                <TrendingDown className="w-3.5 h-3.5 text-green-400" aria-hidden="true" />
+                <span className="text-[12px] text-green-400 font-medium font-mono">Saving ${savings}</span>
               </div>
             )}
           </div>
 
-          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <Info className="w-4 h-4 text-slate-400" />
-              <span className="text-sm text-slate-600">Last Week Actual</span>
+          {/* Last Week Actual */}
+          <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Info className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
+              <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold">Last Week</span>
             </div>
-            <div className="text-3xl text-slate-900 mb-1 font-bold">${spendingPrediction.lastWeekActual}</div>
-            <p className="text-sm text-slate-500">Actual spending</p>
-            <div className="mt-2 flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-red-500" />
-              <span className="text-sm text-red-500">+${spendingPrediction.total - spendingPrediction.lastWeekActual} vs prediction</span>
+            <div className="text-3xl text-zinc-100 font-semibold font-mono tabular-nums">${spendingPrediction.lastWeekActual}</div>
+            <p className="text-[12px] text-zinc-400 mt-1 font-medium">Actual spending</p>
+            <div className="mt-3 flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5 text-red-400" aria-hidden="true" />
+              <span className="text-[12px] text-red-400 font-mono">+${spendingPrediction.total - spendingPrediction.lastWeekActual} vs prediction</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-slate-800 font-medium">Calendar Events This Week</h3>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-up" style={{ animationDelay: "80ms" }}>
+          {/* Event List */}
+          <div className="lg:col-span-2 bg-surface-1 border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+              <h3 className="text-[13px] text-zinc-200 font-semibold">Calendar Events This Week</h3>
               {skippedEvents.size > 0 && (
-                <button onClick={reset} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
-                  <RefreshCw className="w-3 h-3" /> Reset
+                <button
+                  onClick={reset}
+                  className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 rounded"
+                  type="button"
+                >
+                  <RefreshCw className="w-3 h-3" aria-hidden="true" /> Reset
                 </button>
               )}
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-white/[0.04]">
               {weeklyEvents.map((event) => {
                 const isSkipped = skippedEvents.has(event.id);
-                const catColor = categoryColors[event.category] || "#6b7280";
-                const emoji = event.category === "meal" || event.category === "food" ? "🍽️" : event.category === "entertainment" ? "🎭" : event.category === "coffee" ? "☕" : event.category === "transport" ? "🚗" : "📅";
                 return (
                   <div
                     key={event.id}
-                    className={`flex items-center gap-4 px-5 py-3.5 transition-all ${isSkipped ? "opacity-50 bg-slate-50" : "hover:bg-slate-50"}`}
+                    className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${isSkipped ? "opacity-40" : "hover:bg-white/[0.02]"}`}
                   >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 text-xs" style={{ backgroundColor: catColor }}>
-                      {emoji}
-                    </div>
+                    <div
+                      className="w-1 h-8 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: categoryColors[event.category] || "#71717a", opacity: 0.6 }}
+                    />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className={`text-sm text-slate-800 ${isSkipped ? "line-through" : ""} font-medium`}>{event.title}</p>
-                        <span className="text-xs px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: event.color }}>
-                          {event.calendar}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className={`text-[13px] text-zinc-300 ${isSkipped ? "line-through text-zinc-600" : ""} font-medium truncate`}>
+                        {event.title}
+                      </p>
+                      <p className="text-[11px] text-zinc-600 mt-0.5 font-mono" suppressHydrationWarning>
                         {event.date} at {event.time}
-                        {event.location ? ` · ${event.location}` : ""}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-sm ${isSkipped ? "line-through text-slate-400" : "text-slate-800"} font-semibold`}>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span className={`text-[13px] font-mono tabular-nums ${isSkipped ? "line-through text-zinc-600" : "text-zinc-300"} font-medium`}>
                         {event.predictedSpend > 0 ? `$${event.predictedSpend}` : "Free"}
                       </span>
                       <button
                         onClick={() => toggleSkip(event.id)}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isSkipped ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-200" : "bg-slate-100 text-slate-400 hover:bg-red-100 hover:text-red-500"}`}
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 ${
+                          isSkipped
+                            ? "bg-green-500/[0.12] text-green-400 hover:bg-green-500/20"
+                            : "bg-white/[0.04] text-zinc-600 hover:bg-red-500/[0.12] hover:text-red-400"
+                        }`}
                         title={isSkipped ? "Restore event" : "Skip event"}
+                        aria-label={isSkipped ? `Restore ${event.title}` : `Skip ${event.title}`}
+                        type="button"
                       >
-                        {isSkipped ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                        {isSkipped ? <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" /> : <XCircle className="w-3.5 h-3.5" aria-hidden="true" />}
                       </button>
                     </div>
                   </div>
@@ -283,43 +296,71 @@ export default function PredictionsPage() {
             </div>
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-4">
-            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-              <h3 className="text-slate-800 font-medium mb-4">Category Breakdown</h3>
+            {/* Category Breakdown */}
+            <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+              <h3 className="text-[13px] text-zinc-200 font-semibold mb-4">Category Breakdown</h3>
               <ResponsiveContainer width="100%" height={160}>
                 <BarChart data={breakdownData} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: "#94a3b8" }} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} width={80} />
-                  <Tooltip contentStyle={{ fontSize: 12, border: "1px solid #e2e8f0", borderRadius: 8 }} formatter={(v: number) => [`$${v}`, ""]} />
-                  <Bar dataKey="value" radius={4}>
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10, fill: "#52525b" }}
+                    axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "#a1a1aa" }}
+                    width={80}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      fontSize: 12,
+                      background: "#1c1c1f",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: 10,
+                      color: "#e4e4e7",
+                    }}
+                    formatter={(v: unknown) => [`$${v}`, ""]}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={14}>
                     {breakdownData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
+                      <Cell key={i} fill={entry.color} fillOpacity={0.6} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-              <h3 className="text-slate-800 font-medium mb-1">What-If Scenarios</h3>
-              <p className="text-xs text-slate-400 mb-4">Apply a scenario to see your savings</p>
-              <div className="space-y-3">
+            {/* What-If Scenarios */}
+            <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+              <h3 className="text-[13px] text-zinc-200 font-semibold mb-1">What-If Scenarios</h3>
+              <p className="text-[11px] text-zinc-600 mb-4">Apply a scenario to see your savings</p>
+              <div className="space-y-2">
                 {whatIfScenarios.map((scenario) => {
                   const isActive = activeScenario === scenario.id;
                   return (
                     <button
                       key={scenario.id}
                       onClick={() => applyScenario(scenario.id)}
-                      className={`w-full text-left p-3 rounded-lg border transition-all ${isActive ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-slate-50 hover:border-blue-300 hover:bg-blue-50"}`}
+                      className={`w-full text-left p-3 rounded-lg border transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400 ${
+                        isActive
+                          ? "border-green-500/20 bg-green-500/[0.06]"
+                          : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]"
+                      }`}
+                      type="button"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className={`text-sm text-slate-700 ${isActive ? "font-semibold" : ""}`}>{scenario.label}</span>
-                        {isActive && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                        <span className={`text-[12px] text-zinc-300 ${isActive ? "font-medium" : ""}`}>{scenario.label}</span>
+                        {isActive && <CheckCircle className="w-3.5 h-3.5 text-green-400" aria-hidden="true" />}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-xs text-emerald-600">Save ${scenario.savings} → new total ${scenario.newTotal}</span>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingDown className="w-3 h-3 text-green-400" aria-hidden="true" />
+                        <span className="text-[11px] text-green-400/80 font-mono">Save ${scenario.savings} &rarr; ${scenario.newTotal}</span>
                       </div>
                     </button>
                   );
@@ -327,12 +368,18 @@ export default function PredictionsPage() {
               </div>
             </div>
 
+            {/* CTA */}
             {savings > 0 && (
-              <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-4 text-white">
-                <h3 className="text-white font-medium mb-1">Ready to save!</h3>
-                <p className="text-xs text-purple-200 mb-3">Turn your ${currentTotal} plan into a savings challenge and earn rewards.</p>
-                <Link href="/challenges" className="inline-flex items-center gap-2 bg-white text-purple-700 px-3 py-2 rounded-lg text-sm hover:bg-purple-50 transition-colors">
-                  Create Challenge <ArrowRight className="w-3.5 h-3.5" />
+              <div className="bg-surface-1 border border-white/[0.06] rounded-xl p-5">
+                <h3 className="text-[13px] text-white font-bold mb-1">Ready to save</h3>
+                <p className="text-[11px] text-zinc-500 mb-3">
+                  Turn your ${currentTotal} plan into a savings challenge and earn rewards.
+                </p>
+                <Link
+                  href="/challenges"
+                  className="inline-flex items-center gap-2 bg-white/[0.08] border border-white/[0.1] text-zinc-200 px-3 py-2 rounded-lg text-[12px] font-medium hover:bg-white/[0.12] transition-colors focus-visible:ring-2 focus-visible:ring-zinc-400"
+                >
+                  Create Challenge <ArrowRight className="w-3 h-3" aria-hidden="true" />
                 </Link>
               </div>
             )}
