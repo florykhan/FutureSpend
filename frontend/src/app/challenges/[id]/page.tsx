@@ -7,7 +7,26 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/format";
 import { formatDate } from "@/lib/format";
-import challengesData from "@/mocks/challenges.json";
+import challengesFallback from "@/mocks/challenges.json";
+
+export const dynamic = "force-dynamic";
+
+interface ChallengeData {
+  list: {
+    id: string;
+    name: string;
+    goal: number;
+    unit: string;
+    endDate: string;
+    participants: number;
+    joined?: boolean;
+    progress?: number;
+    streak?: number;
+    description?: string;
+  }[];
+  leaderboard: { rank: number; name: string; value: number }[];
+  badges: { id: string; name: string; description: string; earned: boolean; icon: string }[];
+}
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -15,22 +34,23 @@ interface Params {
 
 export default async function ChallengeDetailPage({ params }: Params) {
   const { id } = await params;
-  const data = challengesData as {
-    list: {
-      id: string;
-      name: string;
-      goal: number;
-      unit: string;
-      endDate: string;
-      participants: number;
-      joined?: boolean;
-      progress?: number;
-      streak?: number;
-      description?: string;
-    }[];
-    leaderboard: { rank: number; name: string; value: number }[];
-    badges: { id: string; name: string; description: string; earned: boolean; icon: string }[];
-  };
+
+  let data: ChallengeData;
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/challenges`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) throw new Error(`${res.status}`);
+    data = await res.json();
+  } catch {
+    data = challengesFallback as ChallengeData;
+  }
 
   const challenge = data.list.find((c) => c.id === id) || data.list[0];
   const pct = challenge.goal > 0 ? Math.min(100, ((challenge.progress || 0) / challenge.goal) * 100) : 0;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
@@ -12,6 +12,20 @@ export default function SettingsPage() {
   const [monthlyBudget, setMonthlyBudget] = useState("1000");
   const [alertsBeforeEvents, setAlertsBeforeEvents] = useState(true);
   const [weeklySummary, setWeeklySummary] = useState(true);
+  const [bankBalance, setBankBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/bank/summary");
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        setBankBalance(data.checking ?? data.total ?? null);
+      } catch {
+        // Backend unavailable — leave null
+      }
+    })();
+  }, []);
 
   return (
     <PageShell>
@@ -89,6 +103,24 @@ export default function SettingsPage() {
                   className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                 />
               </label>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>Bank Account</CardHeader>
+            <CardContent>
+              {bankBalance !== null ? (
+                <p className="text-sm text-slate-700">
+                  Checking balance:{" "}
+                  <span className="font-semibold text-emerald-600">
+                    ${bankBalance.toLocaleString("en-CA", { minimumFractionDigits: 2 })}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  Unable to load bank data. Make sure the backend is running.
+                </p>
+              )}
             </CardContent>
           </Card>
 

@@ -7,19 +7,19 @@ import { ChatWindow, type ChatMessage } from "@/components/coach/ChatWindow";
 import { PromptChips } from "@/components/coach/PromptChips";
 import { Button } from "@/components/ui/Button";
 import { SUGGESTED_PROMPTS } from "@/lib/constants";
-import chatResponses from "@/mocks/chat.json";
+import chatFallback from "@/mocks/chat.json";
 
-const RESPONSES = chatResponses.responses as Record<string, string>;
+const FALLBACK_RESPONSES = chatFallback.responses as Record<string, string>;
 const TYPING_INTERVAL_MS = 10;
 
-function pickResponse(input: string): string {
+function pickFallbackResponse(input: string): string {
   const lower = input.toLowerCase();
-  if (lower.includes("overspend")) return RESPONSES.overspend;
+  if (lower.includes("overspend")) return FALLBACK_RESPONSES.overspend;
   if (lower.includes("afford") && (lower.includes("weekend") || lower.includes("out")))
-    return RESPONSES.afford_weekend;
-  if (lower.includes("trigger")) return RESPONSES.trigger;
-  if (lower.includes("savings") || lower.includes("goal")) return RESPONSES.savings_goal;
-  return RESPONSES.default;
+    return FALLBACK_RESPONSES.afford_weekend;
+  if (lower.includes("trigger")) return FALLBACK_RESPONSES.trigger;
+  if (lower.includes("savings") || lower.includes("goal")) return FALLBACK_RESPONSES.savings_goal;
+  return FALLBACK_RESPONSES.default;
 }
 
 export default function CoachPage() {
@@ -69,8 +69,22 @@ export default function CoachPage() {
       setInput("");
       setLoading(true);
 
-      setTimeout(() => {
-        const reply = pickResponse(trimmed);
+      (async () => {
+        let replyText: string;
+        try {
+          const res = await fetch("/api/coach/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: trimmed }),
+          });
+          if (!res.ok) throw new Error(`${res.status}`);
+          const data = await res.json();
+          replyText = data.reply?.content ?? pickFallbackResponse(trimmed);
+        } catch {
+          // Fallback to local keyword-matching if backend is unreachable
+          replyText = pickFallbackResponse(trimmed);
+        }
+
         const assistantMsg: ChatMessage = {
           id: `a-${Date.now()}`,
           role: "assistant",
@@ -79,8 +93,8 @@ export default function CoachPage() {
         };
         setMessages((prev) => [...prev, assistantMsg]);
         setLoading(false);
-        setStreaming({ messageId: assistantMsg.id, fullText: reply });
-      }, 800);
+        setStreaming({ messageId: assistantMsg.id, fullText: replyText });
+      })();
     },
     []
   );

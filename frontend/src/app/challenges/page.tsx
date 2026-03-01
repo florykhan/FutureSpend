@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Trophy } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
 import { CreateChallengeModal } from "@/components/challenges/CreateChallengeModal";
 import { Button } from "@/components/ui/Button";
-import challengesData from "@/mocks/challenges.json";
+import { LoadingState } from "@/components/common/LoadingState";
+import challengesFallback from "@/mocks/challenges.json";
 
 interface ChallengeItem {
   id: string;
@@ -24,8 +25,30 @@ interface ChallengeItem {
 
 export default function ChallengesPage() {
   const [modalOpen, setModalOpen] = useState(false);
-  const { list } = challengesData as { list: ChallengeItem[] };
-  const [challenges, setChallenges] = useState(list);
+  const [challenges, setChallenges] = useState<ChallengeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/challenges", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        if (!cancelled) setChallenges(data.list ?? []);
+      } catch {
+        // Fallback to mocks
+        if (!cancelled) setChallenges((challengesFallback as { list: ChallengeItem[] }).list);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleJoin = (id: string) => {
     setChallenges((prev) =>
@@ -51,7 +74,9 @@ export default function ChallengesPage() {
         </div>
 
         <div className="space-y-4">
-          {challenges.map((ch) => (
+          {loading ? (
+            <LoadingState message="Loading challenges..." />
+          ) : challenges.map((ch) => (
             <div key={ch.id} className="flex items-center gap-4">
               <div className="flex-1">
                 <ChallengeCard
