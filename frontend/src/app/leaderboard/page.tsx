@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useState, useEffect } from "react";
+import { type CSSProperties, useMemo, useState, useEffect } from "react";
 import {
   Trophy,
   TrendUp,
@@ -26,208 +26,70 @@ import {
 import { PageShell } from "@/components/layout/PageShell";
 import { api } from "@/lib/api";
 import { CHART_TOOLTIP_STYLE } from "@/lib/constants";
+import {
+  getActiveChallenge,
+  getCurrentUserEntry,
+  getInitials,
+  getLeaderboardNeighbors,
+} from "@/lib/dashboard";
+import { getStoredMonthlyBudget } from "@/lib/preferences";
 import { getDashboardTypographyVars } from "@/lib/typography";
-
-const COLORS = [
-  "#10A861",
-  "#2E90FA",
-  "#875BF7",
-  "#F79009",
-  "#EC2222",
-  "#06AED4",
-];
-
-type LeaderboardEntry = {
-  rank: number;
-  id: string;
-  name: string;
-  avatar: string;
-  spent: number;
-  target: number;
-  status: "under" | "over";
-  avatarColor: string;
-  isCurrentUser?: boolean;
-};
-
-const fallbackLeaderboard: LeaderboardEntry[] = [
-  {
-    rank: 1,
-    id: "u1",
-    name: "Jordan Lee",
-    avatar: "JL",
-    spent: 62,
-    target: 274,
-    status: "under",
-    avatarColor: "#10A861",
-  },
-  {
-    rank: 2,
-    id: "u2",
-    name: "Alex Chen",
-    avatar: "AC",
-    spent: 85,
-    target: 274,
-    status: "under",
-    avatarColor: "#2E90FA",
-    isCurrentUser: true,
-  },
-  {
-    rank: 3,
-    id: "u3",
-    name: "Sam Park",
-    avatar: "SP",
-    spent: 134,
-    target: 274,
-    status: "under",
-    avatarColor: "#875BF7",
-  },
-  {
-    rank: 4,
-    id: "u4",
-    name: "Taylor Kim",
-    avatar: "TK",
-    spent: 198,
-    target: 274,
-    status: "under",
-    avatarColor: "#F79009",
-  },
-  {
-    rank: 5,
-    id: "u5",
-    name: "Riley Nguyen",
-    avatar: "RN",
-    spent: 312,
-    target: 274,
-    status: "over",
-    avatarColor: "#EC2222",
-  },
-  {
-    rank: 6,
-    id: "u6",
-    name: "Morgan Walsh",
-    avatar: "MW",
-    spent: 0,
-    target: 274,
-    status: "under",
-    avatarColor: "#06AED4",
-  },
-];
-
-const allTimeLeaderboard = [
-  {
-    rank: 1,
-    name: "Jordan Lee",
-    avatar: "JL",
-    points: 3120,
-    wins: 8,
-    color: "#10A861",
-  },
-  {
-    rank: 2,
-    name: "Sam Park",
-    avatar: "SP",
-    points: 2780,
-    wins: 7,
-    color: "#875BF7",
-  },
-  {
-    rank: 3,
-    name: "Alex Chen",
-    avatar: "AC",
-    points: 2340,
-    wins: 6,
-    color: "#2E90FA",
-    isCurrentUser: true,
-  },
-  {
-    rank: 4,
-    name: "Morgan Walsh",
-    avatar: "MW",
-    points: 1950,
-    wins: 5,
-    color: "#06AED4",
-  },
-  {
-    rank: 5,
-    name: "Taylor Kim",
-    avatar: "TK",
-    points: 1640,
-    wins: 4,
-    color: "#F79009",
-  },
-  {
-    rank: 6,
-    name: "Riley Nguyen",
-    avatar: "RN",
-    points: 890,
-    wins: 2,
-    color: "#EC2222",
-  },
-];
-
-const fallbackChallenge = {
-  name: "Weekend Warrior",
-  target: 274,
-  deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-  reward: 650,
-};
+import type { DashboardPayload } from "@/lib/types";
 
 export default function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState<"current" | "alltime">("current");
-  const [extendedLeaderboard, setExtendedLeaderboard] =
-    useState(fallbackLeaderboard);
-  const [activeChallenge, setActiveChallenge] = useState(fallbackChallenge);
+  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!!process.env.NEXT_PUBLIC_API_URL);
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_API_URL) return;
+    let cancelled = false;
+
     api
-      .getDashboard()
+      .getDashboard({ monthlyBudget: getStoredMonthlyBudget() })
       .then((data) => {
-        const list = data.challenges?.list ?? [];
-        const lb = data.challenges?.leaderboard ?? [];
-        const ch = list[0];
-        if (ch && lb.length > 0) {
-          setActiveChallenge({
-            name: ch.name,
-            target: ch.goal,
-            deadline: new Date(
-              Date.now() + 7 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-            reward: 650,
-          });
-          setExtendedLeaderboard(
-            lb.map(
-              (
-                e: { rank: number; name: string; value: number },
-                i: number
-              ) => ({
-                rank: e.rank,
-                id: `u${i + 1}`,
-                name: e.name,
-                avatar: e.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .slice(0, 2),
-                spent: e.value,
-                target: ch.goal,
-                status: (e.value <= ch.goal ? "under" : "over") as "under" | "over",
-                avatarColor: COLORS[i % COLORS.length],
-                ...(e.name === "You" ? { isCurrentUser: true } : {}),
-              })
-            )
-          );
-        }
+        if (cancelled) return;
+        setDashboard(data);
       })
-      .catch(() => {});
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const barData = extendedLeaderboard.map((p) => ({
-    name: p.name.split(" ")[0],
-    spent: p.spent,
-    target: p.target,
-    color: p.avatarColor,
-    isCurrentUser: "isCurrentUser" in p && p.isCurrentUser,
+  const activeChallenge = dashboard ? getActiveChallenge(dashboard) : undefined;
+  const extendedLeaderboard = useMemo(
+    () =>
+      (dashboard?.challenges.leaderboard ?? []).map((entry, index) => ({
+        rank: entry.rank,
+        id: `u${index + 1}`,
+        name: entry.name,
+        avatar: entry.avatar ?? getInitials(entry.name),
+        spent: entry.value,
+        target: activeChallenge?.goal ?? 0,
+        status: (entry.value <= (activeChallenge?.goal ?? 0) ? "under" : "over") as "under" | "over",
+        avatarColor: entry.color ?? ["#10A861", "#2E90FA", "#875BF7", "#F79009", "#EC2222", "#06AED4"][index % 6],
+        isCurrentUser: entry.isCurrentUser || entry.name === dashboard?.profile.name,
+      })),
+    [activeChallenge?.goal, dashboard]
+  );
+
+  const allTimeLeaderboard = dashboard?.allTimeLeaderboard ?? [];
+  const barData = extendedLeaderboard.map((participant) => ({
+    name: participant.name.split(" ")[0],
+    spent: participant.spent,
+    target: participant.target,
+    color: participant.avatarColor,
+    isCurrentUser: participant.isCurrentUser,
   }));
 
   const getRankIcon = (rank: number) => {
@@ -246,10 +108,46 @@ export default function LeaderboardPage() {
     );
   };
 
+  const currentEntry = dashboard
+    ? getCurrentUserEntry(dashboard.challenges.leaderboard, dashboard.profile.name)
+    : undefined;
+  const { leader, trailing } = getLeaderboardNeighbors(
+    dashboard?.challenges.leaderboard ?? [],
+    currentEntry
+  );
   const daysRemaining = Math.ceil(
-    (new Date(activeChallenge.deadline).getTime() - Date.now()) /
+    ((activeChallenge?.deadline
+      ? new Date(activeChallenge.deadline).getTime()
+      : Date.now()) - Date.now()) /
       (1000 * 60 * 60 * 24)
   );
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="p-6 flex items-center justify-center min-h-[240px]">
+          <p className="text-gray-500 text-sm font-medium">Loading leaderboard...</p>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!dashboard || !activeChallenge) {
+    return (
+      <PageShell>
+        <div className="p-6 flex items-center justify-center min-h-[240px]">
+          <div className="text-center space-y-2">
+            <p className="text-gray-300 text-sm font-medium">
+              Leaderboard data is unavailable.
+            </p>
+            <p className="text-gray-600 text-sm">
+              {error ?? "Start the backend and set NEXT_PUBLIC_API_URL."}
+            </p>
+          </div>
+        </div>
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell>

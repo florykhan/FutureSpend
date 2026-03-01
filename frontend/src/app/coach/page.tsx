@@ -13,8 +13,8 @@ import {
 } from "@phosphor-icons/react";
 import { PageShell } from "@/components/layout/PageShell";
 import { api } from "@/lib/api";
+import { getStoredMonthlyBudget } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
-import chatResponses from "@/mocks/chat.json";
 
 /* ─── Types ─── */
 
@@ -27,24 +27,17 @@ interface Message {
   actions?: Array<{ id: string; label: string; impact: string; type: string }>;
 }
 
-/* ─── Mock fallback (remove when backend is wired) ─── */
-
-const FALLBACK = chatResponses.responses as Record<string, string>;
-
-function pickFallback(input: string): string {
-  const lower = input.toLowerCase();
-  if (lower.includes("overspend")) return FALLBACK.overspend ?? "Based on your patterns...";
-  if (lower.includes("afford") && (lower.includes("weekend") || lower.includes("out")))
-    return FALLBACK.afford_weekend ?? "You can afford it.";
-  if (lower.includes("trigger")) return FALLBACK.trigger ?? "Your biggest trigger is...";
-  if (lower.includes("savings") || lower.includes("goal")) return FALLBACK.savings_goal ?? "A good savings goal...";
-  if (lower.includes("weekend") || lower.includes("spend this week"))
-    return FALLBACK.afford_weekend ?? "This weekend you might spend...";
-  if (lower.includes("challenge")) return "I can help you create a savings challenge. Try the Weekend Warrior or set a custom cap.";
-  if (lower.includes("health") || lower.includes("score")) return "Your financial health score is looking good. Keep it up!";
-  if (lower.includes("balance") || lower.includes("account")) return "Your projected balance this week is on track.";
-  if (lower.includes("calendar")) return "You have a few events this week that may impact spending. Check your Calendar page.";
-  return FALLBACK.default ?? "I'm here to help with spending predictions, challenges, and calendar insights.";
+interface CoachCalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end?: string;
+  calendarType?: string;
+  location?: string;
+  attendees?: number;
+  predictedSpend?: number;
+  category?: string;
+  why?: string;
 }
 
 /* ─── Suggested prompts ─── */
@@ -106,6 +99,8 @@ export default function CoachPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamId, setStreamId] = useState<string | null>(null);
+  const [calendarEvents, setCalendarEvents] = useState<CoachCalendarEvent[]>([]);
+  const [monthlyBudget, setMonthlyBudget] = useState(getStoredMonthlyBudget);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -142,19 +137,36 @@ export default function CoachPage() {
     };
   }, [streamId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    api
+      .getDashboard()
+      .then((data) => {
+        if (cancelled) return;
+        setCalendarEvents(data.events ?? []);
+        setMonthlyBudget(data.forecast?.monthlyBudget ?? getStoredMonthlyBudget());
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   /* ─── Auto-resize textarea (up to 5 lines) ─── */
   const resizeTextarea = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
   }, []);
 
   /* ─── Send message ─── */
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || isLoading) return;
+      if (!trimmed || isLoading || streamRef.current) return;
 
       // Optimistically add user message
       const userMsg: Message = {
@@ -181,20 +193,21 @@ export default function CoachPage() {
       };
 
       if (process.env.NEXT_PUBLIC_API_URL) {
-        // ── LIVE: calls api.coachChat(message, session_id, events, monthly_budget) ──
         try {
-          const res = await api.coachChat(trimmed);
+          const res = await api.coachChat(trimmed, "default", calendarEvents, monthlyBudget);
           startStream(res.reply.content, res.actions);
-        } catch {
-          startStream(pickFallback(trimmed));
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Coach is unavailable right now.";
+          startStream(message);
         }
       } else {
-        // ── MOCK: remove this block once backend is ready ──
-        await new Promise((r) => setTimeout(r, 500));
-        startStream(pickFallback(trimmed));
+        startStream("Coach is unavailable until NEXT_PUBLIC_API_URL is configured.");
       }
     },
-    [isLoading]
+    [calendarEvents, isLoading, monthlyBudget]
   );
 
   /* ─── Keyboard: Enter sends, Shift+Enter is newline ─── */
@@ -212,54 +225,61 @@ export default function CoachPage() {
 
   return (
     <PageShell>
-      <div className="flex h-full flex-col overflow-hidden">
+      <div className="relative flex h-full flex-col overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(46,144,250,0.18),_transparent_34%),radial-gradient(circle_at_85%_12%,_rgba(135,91,247,0.14),_transparent_28%),linear-gradient(180deg,_rgba(16,18,24,0.98)_0%,_rgba(9,9,11,1)_38%,_rgba(6,6,8,1)_100%)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-60" />
+        <div className="pointer-events-none absolute inset-y-24 right-[-12%] h-72 w-72 rounded-full bg-accent-blue/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-[-8%] left-[-10%] h-80 w-80 rounded-full bg-accent-purple/10 blur-3xl" />
         {/* ─── Header ─── */}
-        <div className="flex-shrink-0 flex items-center gap-3 border-b border-white/[0.06] px-5 py-3.5">
-          <div className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue/30 to-accent-purple/30 border border-accent-blue/20">
-            <Lightning size={17} weight="fill" className="text-accent-blue" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface-0 bg-success" />
+        <div className="relative z-10 flex flex-shrink-0 items-center gap-4 border-b border-white/[0.1] bg-black/10 px-6 py-5 backdrop-blur-sm lg:px-8">
+          <div className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-br from-accent-blue/30 via-sky-300/15 to-accent-purple/25 shadow-[0_18px_40px_-24px_rgba(46,144,250,0.95)]">
+            <Lightning size={24} weight="fill" className="text-white" />
+            <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-[#0b0b0f] bg-success" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white leading-tight">FutureSpend Coach</p>
-            <p className="text-xs text-gray-600">Powered by multi-calendar intelligence</p>
+            <p className="text-[1.75rem] font-black leading-none tracking-[-0.04em] text-white sm:text-[2rem]">
+              FutureSpend Coach
+            </p>
+            <p className="mt-1 text-sm font-bold uppercase tracking-[0.22em] text-white">
+              Powered by multi-calendar intelligence
+            </p>
           </div>
         </div>
 
         {/* ─── Messages viewport ─── */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-6">
+        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto">
+          <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-8 lg:px-8">
 
             {/* Welcome screen (shown when no messages) */}
             {isEmpty && (
-              <div className="flex flex-col items-center gap-8 py-10 animate-fade-up">
+              <div className="flex animate-fade-up flex-col items-center gap-10 py-12 text-center">
                 <div className="text-center">
-                  <h1 className="text-2xl font-semibold text-white tracking-tight">
+                  <h1 className="text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">
                     Good to see you.
                   </h1>
-                  <p className="mt-1.5 text-sm text-gray-500">
+                  <p className="mt-3 text-lg font-semibold leading-8 text-white sm:text-xl">
                     Ask anything about your spending or pick a prompt below.
                   </p>
                 </div>
 
                 {/* Prompt grid — 2 columns */}
-                <div className="grid w-full max-w-lg grid-cols-2 gap-2">
+                <div className="grid w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
                   {PROMPTS.map((p) => (
                     <button
                       key={p.label}
                       type="button"
                       onClick={() => sendMessage(p.query)}
-                      className="group flex items-start gap-3 rounded-xl border border-white/[0.07] bg-surface-1 px-4 py-3.5 text-left transition-all duration-150 hover:border-white/[0.13] hover:bg-surface-3"
+                      className="group flex min-h-[120px] items-start gap-4 rounded-[1.35rem] border border-white/[0.14] bg-white/[0.045] px-5 py-5 text-left shadow-[0_28px_60px_-38px_rgba(46,144,250,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.26] hover:bg-white/[0.08]"
                     >
                       <p.icon
-                        size={15}
+                        size={20}
                         weight="duotone"
-                        className="mt-0.5 flex-shrink-0 text-gray-600 transition-colors group-hover:text-accent-blue"
+                        className="mt-0.5 flex-shrink-0 text-white transition-transform duration-200 group-hover:scale-110"
                       />
-                      <div>
-                        <p className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">
+                      <div className="space-y-1">
+                        <p className="text-base font-bold tracking-[-0.02em] text-white">
                           {p.label}
                         </p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-gray-600">
+                        <p className="text-sm font-semibold leading-6 text-white">
                           {p.description}
                         </p>
                       </div>
@@ -274,46 +294,46 @@ export default function CoachPage() {
               <div
                 key={msg.id}
                 className={cn(
-                  "flex gap-2.5 animate-fade-up",
+                  "flex gap-3.5 animate-fade-up",
                   msg.role === "user" ? "flex-row-reverse" : "flex-row"
                 )}
               >
                 {/* Assistant avatar */}
                 {msg.role === "assistant" && (
-                  <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border border-accent-blue/20 bg-accent-blue/10">
-                    <Lightning size={12} weight="fill" className="text-accent-blue" />
+                  <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] shadow-[0_16px_34px_-26px_rgba(46,144,250,1)]">
+                    <Lightning size={15} weight="fill" className="text-white" />
                   </div>
                 )}
 
                 <div
                   className={cn(
-                    "flex flex-col gap-1.5",
+                    "flex flex-col gap-2",
                     msg.role === "user" ? "items-end" : "items-start"
                   )}
                 >
                   {/* Bubble */}
                   <div
                     className={cn(
-                      "text-sm leading-relaxed",
+                      "text-base font-semibold leading-8 text-white sm:text-lg",
                       msg.role === "user"
-                        ? "max-w-sm rounded-2xl rounded-tr-sm bg-surface-4 px-4 py-2.5 text-gray-100"
-                        : "max-w-prose rounded-2xl rounded-tl-sm px-0 py-0 text-gray-300"
+                        ? "max-w-xl rounded-[1.6rem] rounded-tr-md border border-white/[0.12] bg-white/[0.08] px-5 py-4 shadow-[0_30px_60px_-42px_rgba(255,255,255,0.65)]"
+                        : "max-w-3xl rounded-[1.6rem] rounded-tl-md border border-white/[0.08] bg-black/10 px-5 py-4 shadow-[0_30px_60px_-44px_rgba(46,144,250,0.6)]"
                     )}
                   >
                     {msg.content}
                     {/* Streaming cursor */}
                     {msg.id === streamId && (
-                      <span className="ml-0.5 inline-block h-[14px] w-[2px] animate-pulse bg-accent-blue align-middle" />
+                      <span className="ml-0.5 inline-block h-[1.2em] w-[3px] animate-pulse bg-white align-middle" />
                     )}
                   </div>
 
                   {/* Action chips (shown after stream finishes) */}
                   {msg.actions && msg.actions.length > 0 && msg.id !== streamId && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {msg.actions.map((action) => (
                         <span
                           key={action.id}
-                          className="inline-flex items-center rounded-full border border-accent-blue/25 bg-accent-blue/10 px-2.5 py-1 text-xs font-medium text-accent-blue"
+                          className="inline-flex items-center rounded-full border border-white/[0.14] bg-white/[0.08] px-3.5 py-1.5 text-sm font-bold text-white"
                         >
                           {action.label}
                         </span>
@@ -326,21 +346,21 @@ export default function CoachPage() {
 
             {/* Typing indicator */}
             {isLoading && (
-              <div className="flex gap-2.5 animate-fade-up">
-                <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border border-accent-blue/20 bg-accent-blue/10">
-                  <Lightning size={12} weight="fill" className="text-accent-blue" />
+              <div className="flex gap-3.5 animate-fade-up">
+                <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06]">
+                  <Lightning size={15} weight="fill" className="text-white" />
                 </div>
-                <div className="flex items-center gap-1.5 py-3">
+                <div className="flex items-center gap-2 py-4">
                   <span
-                    className="h-1.5 w-1.5 rounded-full bg-gray-600 animate-bounce"
+                    className="h-2 w-2 rounded-full bg-white animate-bounce"
                     style={{ animationDelay: "0ms" }}
                   />
                   <span
-                    className="h-1.5 w-1.5 rounded-full bg-gray-600 animate-bounce"
+                    className="h-2 w-2 rounded-full bg-white animate-bounce"
                     style={{ animationDelay: "160ms" }}
                   />
                   <span
-                    className="h-1.5 w-1.5 rounded-full bg-gray-600 animate-bounce"
+                    className="h-2 w-2 rounded-full bg-white animate-bounce"
                     style={{ animationDelay: "320ms" }}
                   />
                 </div>
@@ -353,9 +373,9 @@ export default function CoachPage() {
         </div>
 
         {/* ─── Composer ─── */}
-        <div className="flex-shrink-0 border-t border-white/[0.06] px-4 py-4">
-          <div className="mx-auto max-w-2xl">
-            <div className="flex items-end gap-3 rounded-2xl border border-white/[0.08] bg-surface-1 px-4 py-3 transition-colors focus-within:border-white/[0.16]">
+        <div className="relative z-10 flex-shrink-0 border-t border-white/[0.1] bg-black/10 px-5 py-5 backdrop-blur-sm lg:px-8">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex min-h-[92px] items-end gap-4 rounded-[1.75rem] border border-white/[0.14] bg-white/[0.045] px-5 py-4 shadow-[0_32px_80px_-52px_rgba(46,144,250,0.95)] transition-colors focus-within:border-white/[0.28]">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -366,24 +386,24 @@ export default function CoachPage() {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about spending, challenges, calendar..."
                 disabled={isLoading}
-                rows={1}
-                style={{ maxHeight: 120 }}
-                className="flex-1 resize-none bg-transparent text-sm leading-relaxed text-white outline-none placeholder:text-gray-700 disabled:opacity-50"
+                rows={2}
+                style={{ maxHeight: 180 }}
+                className="flex-1 resize-none bg-transparent text-lg font-semibold leading-8 text-white outline-none placeholder:text-white/55 disabled:opacity-50 sm:text-xl"
               />
               <button
                 type="button"
                 onClick={() => sendMessage(input)}
                 disabled={!input.trim() || isLoading || !!streamId}
-                className="mb-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-accent-blue transition-all hover:bg-accent-blue/80 disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-accent-blue shadow-[0_24px_50px_-28px_rgba(46,144,250,1)] transition-all hover:scale-[1.03] hover:bg-[#4ba2fb] disabled:cursor-not-allowed disabled:opacity-35"
                 aria-label="Send message"
               >
-                <ArrowUp size={13} weight="bold" className="text-white" />
+                <ArrowUp size={20} weight="bold" className="text-white" />
               </button>
             </div>
-            <p className="mt-2 text-center text-xs text-gray-700">
-              <kbd className="rounded bg-surface-3 px-1 py-0.5 font-mono text-gray-600">Enter</kbd>{" "}
+            <p className="mt-3 text-center text-sm font-semibold text-white">
+              <kbd className="rounded-lg border border-white/[0.14] bg-white/[0.06] px-2 py-1 font-mono text-white">Enter</kbd>{" "}
               to send ·{" "}
-              <kbd className="rounded bg-surface-3 px-1 py-0.5 font-mono text-gray-600">⇧ Enter</kbd>{" "}
+              <kbd className="rounded-lg border border-white/[0.14] bg-white/[0.06] px-2 py-1 font-mono text-white">⇧ Enter</kbd>{" "}
               for newline
             </p>
           </div>

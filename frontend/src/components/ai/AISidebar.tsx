@@ -11,6 +11,8 @@ import {
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { getStoredMonthlyBudget } from "@/lib/preferences";
+import type { CalendarEvent } from "@/lib/types";
 
 interface Message {
   id: string;
@@ -32,35 +34,6 @@ const SAMPLE_QUESTIONS = [
     text: "Find unusual patterns",
   },
 ];
-
-const MOCK_RESPONSES: Record<string, string> = {
-  default:
-    "Based on your spending patterns, I can see a few opportunities to optimize. Your food spending is trending 12% higher than last month. Consider meal prepping on Sundays — users who do this save an average of $47/week.",
-  spending:
-    "This month you've spent $847 so far. Your predicted total is $1,142 which is 14% over your $1,000 budget. The biggest categories are Food ($312), Entertainment ($198), and Transport ($156).",
-  save: "Here are 3 ways to save on food:\n\n1. **Skip eating out on weekdays** — saves ~$85/week\n2. **Use the grocery list feature** — reduces impulse purchases by 23%\n3. **Batch cook on weekends** — average savings of $47/week\n\nWant me to create a challenge around any of these?",
-  challenge:
-    "You're doing great on your Weekend Warrior challenge! You've spent $85 of your $274 target with 2 days left. You're currently ranked #2 — just $23 behind Jordan Lee. Skip the Jazz Concert on Friday and you'll likely take the #1 spot!",
-  budget:
-    "Based on your calendar events next week, I predict you'll spend approximately $274. Here's the breakdown:\n\n• **Food & Coffee**: $89\n• **Entertainment**: $95 (Jazz Concert)\n• **Transport**: $53\n• **Other**: $37\n\nI'd suggest a budget of $250 to save an extra $24.",
-};
-
-function getResponse(input: string): string {
-  const lower = input.toLowerCase();
-  if (lower.includes("spending") || lower.includes("month")) {
-    return MOCK_RESPONSES.spending;
-  }
-  if (lower.includes("save") || lower.includes("food")) {
-    return MOCK_RESPONSES.save;
-  }
-  if (lower.includes("challenge") || lower.includes("track")) {
-    return MOCK_RESPONSES.challenge;
-  }
-  if (lower.includes("budget") || lower.includes("week")) {
-    return MOCK_RESPONSES.budget;
-  }
-  return MOCK_RESPONSES.default;
-}
 
 interface AISidebarProps {
   isOpen: boolean;
@@ -102,6 +75,8 @@ export function AISidebar({ isOpen, onClose }: AISidebarProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [monthlyBudget, setMonthlyBudget] = useState(getStoredMonthlyBudget);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -118,6 +93,23 @@ export function AISidebar({ isOpen, onClose }: AISidebarProps) {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    api
+      .getDashboard()
+      .then((data) => {
+        if (cancelled) return;
+        setCalendarEvents(data.events);
+        setMonthlyBudget(data.forecast.monthlyBudget);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -141,15 +133,21 @@ export function AISidebar({ isOpen, onClose }: AISidebarProps) {
       let reply = "";
       try {
         if (process.env.NEXT_PUBLIC_API_URL) {
-          const res = await api.coachChat(content.trim());
+          const res = await api.coachChat(
+            content.trim(),
+            "sidebar",
+            calendarEvents,
+            monthlyBudget
+          );
           reply = res.reply.content;
         } else {
-          await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
-          reply = getResponse(content);
+          reply = "AI assistant is unavailable until NEXT_PUBLIC_API_URL is configured.";
         }
-      } catch {
-        await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
-        reply = getResponse(content);
+      } catch (error) {
+        reply =
+          error instanceof Error
+            ? error.message
+            : "AI assistant is unavailable right now.";
       }
 
       const assistantMsg: Message = {
@@ -160,7 +158,7 @@ export function AISidebar({ isOpen, onClose }: AISidebarProps) {
       setMessages((prev) => [...prev, assistantMsg]);
       setIsStreaming(false);
     },
-    [isStreaming]
+    [calendarEvents, isStreaming, monthlyBudget]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

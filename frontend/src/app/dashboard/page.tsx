@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AreaChart,
@@ -26,117 +26,114 @@ import { CashflowSankey } from "@/components/dashboard/CashflowSankey";
 import { api } from "@/lib/api";
 import { CHART_TOOLTIP_STYLE } from "@/lib/constants";
 import {
+  getActiveChallenge,
+  getChallengeCurrentSpend,
+  getChallengeReward,
+} from "@/lib/dashboard";
+import { getStoredMonthlyBudget } from "@/lib/preferences";
+import {
   buildSankeyFromForecast,
   parseSankeyResponse,
   type SankeyData,
 } from "@/lib/sankey";
 import { getDashboardTypographyVars } from "@/lib/typography";
-import forecastData from "@/mocks/forecast.json";
-
-const currentUser = {
-  name: "Alex Demo",
-  healthScore: 74,
-  healthScoreTrend: 6,
-  points: 2340,
-};
-const spendingHistoryData = [
-  { week: "Jan W1", predicted: 320, actual: 298 },
-  { week: "Jan W2", predicted: 410, actual: 445 },
-  { week: "Jan W3", predicted: 380, actual: 362 },
-  { week: "Jan W4", predicted: 290, actual: 278 },
-  { week: "Feb W1", predicted: 350, actual: 341 },
-  { week: "Feb W2", predicted: 420, actual: 389 },
-  { week: "Mar W1", predicted: 412, actual: null },
-];
-const healthScoreHistory = [
-  { date: "Oct", score: 52 },
-  { date: "Nov", score: 58 },
-  { date: "Dec", score: 61 },
-  { date: "Jan", score: 67 },
-  { date: "Feb", score: 68 },
-  { date: "Mar", score: 74 },
-];
-const fallbackForecast = forecastData as {
-  next7DaysTotal: number;
-  remainingBudget: number;
-  monthlyBudget: number;
-  byCategory: Array<{ name: string; value: number; key: string }>;
-};
-const fallbackChallenges = [
-  { id: "c1", name: "Weekend Warrior", current: 85, target: 274, reward: 650 },
-  { id: "c2", name: "Dining Out Diet", current: 45, target: 180, reward: 400 },
-];
+import type { DashboardPayload } from "@/lib/types";
 
 export default function DashboardPage() {
-  const [forecast, setForecast] = useState(fallbackForecast);
-  const [activeChallenges, setActiveChallenges] = useState(fallbackChallenges);
-  const [sankeyData, setSankeyData] = useState<SankeyData>(
-    buildSankeyFromForecast(fallbackForecast)
-  );
+  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  const [sankeyData, setSankeyData] = useState<SankeyData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_API_URL) {
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
+    let hasDedicatedSankey = false;
 
-    // Try to load Sankey data from dedicated endpoint first (pluggable),
-    // fall back to transforming forecast data client-side.
+    const query = { monthlyBudget: getStoredMonthlyBudget() };
+
     const sankeyPromise = api
-      .getSankey()
+      .getSankey(query)
       .then((raw) => {
+        if (cancelled) return;
         const parsed = parseSankeyResponse(raw);
-        if (parsed) setSankeyData(parsed);
-      })
-      .catch(() => {
-        // Backend doesn't have Sankey endpoint yet — will build from forecast
-      });
-
-    const dashboardPromise = api
-      .getDashboard()
-      .then((data) => {
-        setForecast(data.forecast);
-        // Build Sankey from forecast as fallback
-        setSankeyData((prev) => {
-          // Only overwrite if we didn't get dedicated Sankey data
-          if (prev === buildSankeyFromForecast(fallbackForecast)) {
-            return buildSankeyFromForecast(data.forecast);
-          }
-          return prev;
-        });
-        const list = data.challenges?.list ?? [];
-        if (list.length > 0) {
-          setActiveChallenges(
-            list
-              .slice(0, 2)
-              .map((c: { id: string; name: string; goal: number }) => ({
-                id: c.id,
-                name: c.name,
-                current: Math.round(c.goal * 0.35),
-                target: c.goal,
-                reward: 650,
-              }))
-          );
+        if (parsed) {
+          hasDedicatedSankey = true;
+          setSankeyData(parsed);
         }
       })
-      .catch(() => {
-        setForecast(fallbackForecast);
-        setActiveChallenges(fallbackChallenges);
+      .catch(() => {});
+
+    const dashboardPromise = api
+      .getDashboard(query)
+      .then((data) => {
+        if (cancelled) return;
+        setDashboard(data);
+        if (!hasDedicatedSankey) {
+          setSankeyData(buildSankeyFromForecast(data.forecast));
+        }
+      })
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setError(err.message);
       });
 
-    Promise.allSettled([sankeyPromise, dashboardPromise]).finally(() =>
-      setLoading(false)
-    );
+    Promise.allSettled([sankeyPromise, dashboardPromise]).finally(() => {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const score = currentUser.healthScore;
+  const forecast = dashboard?.forecast;
+  const profile = dashboard?.profile;
+  const stats = dashboard?.dashboardStats;
+  const activeChallenge = dashboard ? getActiveChallenge(dashboard) : undefined;
+  const activeChallenges = dashboard?.challenges.list.slice(0, 2) ?? [];
+  const score = dashboard?.healthScore ?? 0;
+  const spendingHistoryData = useMemo(
+    () =>
+      (dashboard?.spendingHistory ?? []).map((point) => ({
+        week: point.week ?? "",
+        predicted: point.predicted ?? 0,
+        actual: point.actual ?? null,
+      })),
+    [dashboard]
+  );
+  const healthScoreHistory = useMemo(
+    () =>
+      (dashboard?.healthScoreHistory ?? []).map((point) => ({
+        date: point.date ?? "",
+        score: point.score ?? 0,
+      })),
+    [dashboard]
+  );
 
   if (loading) {
     return (
       <PageShell>
         <div className="p-8 flex items-center justify-center min-h-[200px]">
           <p className="text-gray-500 text-sm font-medium">Loading&hellip;</p>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!dashboard || !forecast || !profile || !stats) {
+    return (
+      <PageShell>
+        <div className="p-8 flex items-center justify-center min-h-[240px]">
+          <div className="text-center space-y-2">
+            <p className="text-gray-300 text-sm font-medium">
+              Dashboard data is unavailable.
+            </p>
+            <p className="text-gray-600 text-sm">
+              {error ?? "Start the backend and set NEXT_PUBLIC_API_URL."}
+            </p>
+          </div>
         </div>
       </PageShell>
     );
@@ -155,7 +152,7 @@ export default function DashboardPage() {
               className="text-white text-xl lg:text-3xl font-medium tracking-tight"
               style={{ textWrap: "balance" }}
             >
-              Good morning, {currentUser.name.split(" ")[0]}
+              Good morning, {profile.name.split(" ")[0]}
             </h2>
             <p className="text-sm lg:text-base text-gray-400 mt-1 font-medium">
               Your financial snapshot for this week.
@@ -186,7 +183,7 @@ export default function DashboardPage() {
               />
               <span className="flex items-center gap-1 text-sm text-success font-mono font-medium">
                 <TrendUp size={14} weight="bold" aria-hidden="true" />+
-                {currentUser.healthScoreTrend}
+                {stats.healthScoreTrend}
               </span>
             </div>
             <div className="text-3xl font-medium text-white font-mono tabular-nums">
@@ -221,7 +218,8 @@ export default function DashboardPage() {
                 aria-hidden="true"
               />
               <span className="text-sm text-destructive font-mono font-medium">
-                +$26
+                {stats.weekOverWeekDelta >= 0 ? "+" : "-"}$
+                {Math.abs(stats.weekOverWeekDelta)}
               </span>
             </div>
             <div className="text-3xl font-medium text-white font-mono tabular-nums">
@@ -249,13 +247,13 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="text-3xl font-medium text-white font-mono tabular-nums">
-              {currentUser.points.toLocaleString()}
+              {profile.points.toLocaleString()}
             </div>
             <p className="text-sm text-gray-400 mt-0.5 font-medium">
               Total Points
             </p>
             <p className="text-sm text-gray-600 mt-1 font-mono font-medium">
-              660 pts to Gold
+              {profile.tier}
             </p>
           </div>
 
@@ -269,17 +267,17 @@ export default function DashboardPage() {
                 aria-hidden="true"
               />
               <span className="text-sm text-gray-500 font-medium">
-                2 active
+                {activeChallenges.length} active
               </span>
             </div>
             <div className="text-3xl font-medium text-white font-mono tabular-nums">
-              $274
+              ${Math.round(activeChallenge?.goal ?? 0)}
             </div>
             <p className="text-sm text-gray-400 mt-0.5 font-medium">
               Weekend Target
             </p>
             <p className="text-sm text-gray-600 mt-1 font-mono font-medium">
-              $85 spent of $274
+              ${Math.round(getChallengeCurrentSpend(activeChallenge ?? { id: "", name: "", goal: 0, unit: "CAD", endDate: "", participants: 0 }))} spent of ${Math.round(activeChallenge?.goal ?? 0)}
             </p>
           </div>
         </div>
@@ -410,7 +408,13 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="h-[260px]">
-              <CashflowSankey data={sankeyData} />
+              {sankeyData ? (
+                <CashflowSankey data={sankeyData} />
+              ) : (
+                <div className="h-full flex items-center justify-center text-sm text-gray-600">
+                  Sankey data unavailable
+                </div>
+              )}
             </div>
             <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between">
               <span className="text-sm text-gray-500 font-medium">
@@ -445,7 +449,7 @@ export default function DashboardPage() {
             <div className="space-y-5">
               {activeChallenges.map((challenge) => {
                 const pct = Math.round(
-                  (challenge.current / challenge.target) * 100
+                  (getChallengeCurrentSpend(challenge) / challenge.goal) * 100
                 );
                 const isWarning = pct > 75;
                 return (
@@ -472,7 +476,7 @@ export default function DashboardPage() {
                           />
                         )}
                         <span className="text-sm text-gray-500 font-mono tabular-nums font-medium">
-                          ${challenge.current} / ${challenge.target}
+                          ${Math.round(getChallengeCurrentSpend(challenge))} / ${Math.round(challenge.goal)}
                         </span>
                       </div>
                     </div>
@@ -493,7 +497,7 @@ export default function DashboardPage() {
                         {pct}% of budget used
                       </span>
                       <span className="text-sm text-gray-500 font-mono tabular-nums font-medium">
-                        {challenge.reward} pts
+                        {getChallengeReward(challenge)} pts
                       </span>
                     </div>
                   </div>
@@ -509,7 +513,7 @@ export default function DashboardPage() {
                 Health Score Trend
               </h3>
               <span className="text-sm text-success/80 font-mono font-medium">
-                +{currentUser.healthScoreTrend} this month
+                +{stats.healthScoreTrend} this month
               </span>
             </div>
             <ResponsiveContainer width="100%" height={140}>
@@ -565,9 +569,9 @@ export default function DashboardPage() {
             </ResponsiveContainer>
             <div className="mt-4 grid grid-cols-3 gap-2">
               {[
-                { label: "Spending Accuracy", value: "85%" },
-                { label: "Challenge Win Rate", value: "75%" },
-                { label: "Savings Rate", value: "68%" },
+                { label: "Spending Accuracy", value: `${stats.spendingAccuracy}%` },
+                { label: "Challenge Win Rate", value: `${stats.challengeWinRate}%` },
+                { label: "Savings Rate", value: `${stats.savingsRate}%` },
               ].map((item) => (
                 <div
                   key={item.label}

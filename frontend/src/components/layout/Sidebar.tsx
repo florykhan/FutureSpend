@@ -34,7 +34,7 @@ export function Sidebar() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors",
                 isActive
                   ? "bg-primary-100 text-primary-800"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"

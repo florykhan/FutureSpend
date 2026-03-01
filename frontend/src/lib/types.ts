@@ -44,8 +44,12 @@ export interface Challenge {
   joined?: boolean;
   progress?: number;
   streak?: number;
+  currentSpend?: number;
+  reward?: number;
   badges?: Badge[];
   leaderboard?: LeaderboardEntry[];
+  description?: string;
+  deadline?: string;
 }
 
 export interface LeaderboardEntry {
@@ -53,6 +57,10 @@ export interface LeaderboardEntry {
   name: string;
   value: number;
   avatar?: string;
+  isCurrentUser?: boolean;
+  color?: string;
+  points?: number;
+  wins?: number;
 }
 
 export interface Badge {
@@ -78,4 +86,79 @@ export interface UserProfile {
     alertsBeforeEvents: boolean;
     weeklySummary: boolean;
   };
+}
+
+export interface DashboardStats {
+  healthScoreTrend: number;
+  weekOverWeekDelta: number;
+  predictedConfidence: number;
+  spendingAccuracy: number;
+  challengeWinRate: number;
+  savingsRate: number;
+  totalSaved: number;
+  challengesWon: number;
+  totalChallenges: number;
+}
+
+export interface DashboardProfile {
+  name: string;
+  email: string;
+  points: number;
+  tier: string;
+}
+
+export interface HistoryPoint {
+  week?: string;
+  date?: string;
+  predicted?: number | null;
+  actual?: number | null;
+  score?: number | null;
+}
+
+export interface PastChallenge {
+  id: string;
+  name: string;
+  target: number;
+  actual: number;
+  reward: number;
+  status: "won" | "lost";
+  month: string;
+}
+
+export interface ForecastCategory {
+  name: string;
+  value: number;
+  key: string;
+}
+
+export interface ForecastSummary {
+  next7DaysTotal: number;
+  remainingBudget: number;
+  monthlyBudget: number;
+  riskScore: RiskLevel;
+  daily?: Array<{ date: string; predictedSpend: number; [k: string]: unknown }>;
+  byCategory: ForecastCategory[];
+  recommendedActions?: RecommendedAction[];
+}
+
+export interface DashboardPayload {
+  events: CalendarEvent[];
+  forecast: ForecastSummary;
+  insights: Insight[];
+  challenges: {
+    list: Challenge[];
+    leaderboard: LeaderboardEntry[];
+    badges: Badge[];
+  };
+  healthScore: number;
+  profile: DashboardProfile;
+  dashboardStats: DashboardStats;
+  spendingHistory: HistoryPoint[];
+  healthScoreHistory: HistoryPoint[];
+  pastChallenges: PastChallenge[];
+  friendSuggestions: string[];
+  allTimeLeaderboard: LeaderboardEntry[];
+  leaderboardTip: string;
+  activeChallenge?: Challenge;
+  generatedAt: string;
 }

@@ -3,12 +3,46 @@
  * Base URL: set NEXT_PUBLIC_API_URL in .env.local (e.g. http://localhost:8000).
  */
 
+import type {
+  CalendarEvent,
+  ChatMessage,
+  Challenge,
+  DashboardPayload,
+  LeaderboardEntry,
+} from "@/lib/types";
+import { getStoredMonthlyBudget } from "@/lib/preferences";
+
+interface DashboardQueryOptions {
+  monthlyBudget?: number;
+  spentSoFar?: number;
+  sessionId?: string;
+}
+
 const getBaseUrl = (): string => {
   if (typeof window !== "undefined") {
     return process.env.NEXT_PUBLIC_API_URL ?? "";
   }
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 };
+
+function buildQueryString(params: Record<string, string | number | undefined>): string {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value == null) continue;
+    searchParams.set(key, String(value));
+  }
+  const query = searchParams.toString();
+  return query ? `?${query}` : "";
+}
+
+function buildDashboardQuery(options: DashboardQueryOptions = {}): string {
+  const monthlyBudget = options.monthlyBudget ?? getStoredMonthlyBudget();
+  return buildQueryString({
+    monthly_budget: monthlyBudget,
+    spent_so_far: options.spentSoFar,
+    session_id: options.sessionId,
+  });
+}
 
 async function request<T>(
   path: string,
@@ -54,54 +88,16 @@ export async function healthCheck(): Promise<boolean> {
 
 export const api = {
   /** Cashflow Sankey data (pluggable — backend can return pre-built Sankey shape). */
-  getSankey: () =>
+  getSankey: (options: DashboardQueryOptions = {}) =>
     request<{
       nodes: Array<{ name: string; value: number; percentage: number; color: string }>;
       links: Array<{ source: number; target: number; value: number; color: string; percentage: number }>;
       currencySymbol: string;
-    }>("/api/dashboard/sankey"),
+    }>(`/api/dashboard/sankey${buildDashboardQuery(options)}`),
 
   /** Full dashboard payload (events, forecast, insights, challenges). No auth required. */
-  getDashboard: () =>
-    request<{
-      events: Array<{
-        id: string;
-        title: string;
-        start: string;
-        end: string;
-        calendarType: string;
-        predictedSpend: number;
-        category: string;
-        why?: string;
-      }>;
-      forecast: {
-        next7DaysTotal: number;
-        remainingBudget: number;
-        monthlyBudget: number;
-        riskScore: string;
-        daily?: Array<{ date: string; predictedSpend: number; [k: string]: unknown }>;
-        byCategory: Array<{ name: string; value: number; key: string }>;
-        recommendedActions?: Array<{ id: string; label: string; impact: string; type: string }>;
-      };
-      insights: Array<{ id: string; title: string; description: string; type: string; icon?: string }>;
-      challenges: {
-        list: Array<{
-          id: string;
-          name: string;
-          goal: number;
-          unit: string;
-          endDate: string;
-          participants: number;
-          joined?: boolean;
-          progress?: number;
-          streak?: number;
-          description?: string;
-          leaderboard?: Array<{ rank: number; name: string; value: number; avatar?: string }>;
-        }>;
-        leaderboard: Array<{ rank: number; name: string; value: number; avatar?: string }>;
-        badges: Array<{ id: string; name: string; description: string; earned: boolean; icon: string }>;
-      };
-    }>("/api/demo/dashboard"),
+  getDashboard: (options: DashboardQueryOptions = {}) =>
+    request<DashboardPayload>(`/api/dashboard${buildDashboardQuery(options)}`),
 
   /** Raw calendar events (no predictions). Use for pipeline input. */
   getCalendarEvents: () =>
@@ -146,9 +142,14 @@ export const api = {
     }>("/leaderboard", { method: "POST", body: { participants, challenge_target } }),
 
   /** AI coach chat. */
-  coachChat: (message: string, session_id = "default", events: unknown[] = [], monthly_budget = 1000) =>
+  coachChat: (
+    message: string,
+    session_id = "default",
+    events: CalendarEvent[] = [],
+    monthly_budget = getStoredMonthlyBudget()
+  ) =>
     request<{
-      reply: { id: string; role: string; content: string; timestamp: string };
+      reply: ChatMessage;
       actions: Array<{ id: string; label: string; impact: string; type: string }>;
     }>("/api/coach/chat", {
       method: "POST",
@@ -186,14 +187,23 @@ export const api = {
     ),
 
   /** Run full pipeline with custom events (returns events, forecast, insights, challenges). */
-  runPipeline: (events: unknown[], monthly_budget = 1000, spent_so_far = 0) =>
+  runPipeline: (
+    events: CalendarEvent[],
+    monthly_budget = getStoredMonthlyBudget(),
+    spent_so_far = 0,
+    session_id = "default"
+  ) =>
     request<{
-      events: Array<{ id: string; title: string; start: string; end: string; calendarType: string; predictedSpend: number; category: string; why?: string }>;
-      forecast: { next7DaysTotal: number; remainingBudget: number; monthlyBudget: number; riskScore: string; byCategory: Array<{ name: string; value: number; key: string }>; recommendedActions?: Array<{ id: string; label: string; impact: string; type: string }> };
-      insights: unknown[];
-      challenges: { list: unknown[]; leaderboard: unknown[]; badges: unknown[] };
+      events: CalendarEvent[];
+      forecast: DashboardPayload["forecast"];
+      insights: DashboardPayload["insights"];
+      challenges: {
+        list: Challenge[];
+        leaderboard: LeaderboardEntry[];
+        badges: DashboardPayload["challenges"]["badges"];
+      };
     }>("/api/pipeline", {
       method: "POST",
-      body: { events, monthly_budget, spent_so_far, session_id: "default" },
+      body: { events, monthly_budget, spent_so_far, session_id },
     }),
 };

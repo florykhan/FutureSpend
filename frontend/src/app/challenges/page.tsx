@@ -15,8 +15,10 @@ import {
 } from "@phosphor-icons/react";
 import { PageShell } from "@/components/layout/PageShell";
 import { api } from "@/lib/api";
+import { getStoredMonthlyBudget } from "@/lib/preferences";
 import { getDashboardTypographyVars } from "@/lib/typography";
-import challengesData from "@/mocks/challenges.json";
+import type { Challenge as DashboardChallenge, DashboardPayload } from "@/lib/types";
+import { getChallengeCurrentSpend } from "@/lib/dashboard";
 
 function ProgressRing({
   value,
@@ -61,61 +63,42 @@ function ProgressRing({
   );
 }
 
-type ChallengeItem = {
-  id: string;
-  name: string;
-  goal: number;
-  unit: string;
-  endDate: string;
-  participants: number;
-  joined?: boolean;
-  progress?: number;
-  streak?: number;
-  description?: string;
-};
-
-const pastChallenges = [
-  { id: "p1", name: "February Freeze", target: 350, actual: 312, reward: 800, status: "won" as const, month: "Feb 2025" },
-  { id: "p2", name: "Coffee Cap", target: 60, actual: 58, reward: 200, status: "won" as const, month: "Feb 2025" },
-  { id: "p3", name: "Entertainment Budget", target: 150, actual: 183, reward: 300, status: "lost" as const, month: "Jan 2025" },
-];
-const friendSuggestions = ["Jordan Lee", "Sam Park", "Taylor Kim", "Morgan Walsh"];
-const fallbackList = (challengesData as { list: ChallengeItem[] }).list;
-
 export default function ChallengesPage() {
-  const [list, setList] = useState<ChallengeItem[]>(fallbackList);
+  const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  const [list, setList] = useState<DashboardChallenge[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newChallenge, setNewChallenge] = useState({ name: "", target: "200", friends: [] as string[] });
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!process.env.NEXT_PUBLIC_API_URL);
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_API_URL) {
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
+
     api
-      .getDashboard()
+      .getDashboard({ monthlyBudget: getStoredMonthlyBudget() })
       .then((data) => {
+        if (cancelled) return;
+        setDashboard(data);
         const ch = data.challenges?.list ?? [];
-        if (ch.length > 0) {
-          setList(
-            ch.map((c: { id: string; name: string; goal: number; unit: string; endDate: string; participants: number; joined?: boolean; progress?: number; streak?: number; description?: string }) => ({
-              id: c.id,
-              name: c.name,
-              goal: c.goal,
-              unit: c.unit,
-              endDate: c.endDate,
-              participants: c.participants,
-              joined: c.joined ?? false,
-              progress: c.progress ?? 0,
-              streak: c.streak ?? 0,
-              description: c.description ?? "",
-            }))
-          );
-        }
+        setList(ch);
+        setNewChallenge((prev) => ({
+          ...prev,
+          target: String(Math.round(data.forecast.next7DaysTotal)),
+        }));
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const toggleFriend = (friend: string) => {
@@ -128,9 +111,9 @@ export default function ChallengesPage() {
   };
 
   const activeList = list.filter((c) => c.joined);
+  const pastChallenges = dashboard?.pastChallenges ?? [];
+  const friendSuggestions = dashboard?.friendSuggestions ?? [];
 
-  // Derive stats from data where possible; fallback to mock values
-  // These will be replaced by backend-provided stats when available.
   const wonCount = pastChallenges.filter((c) => c.status === "won").length;
   const totalPast = pastChallenges.length;
   const totalPoints = pastChallenges.reduce((s, c) => s + (c.status === "won" ? c.reward : 0), 0);
@@ -142,6 +125,23 @@ export default function ChallengesPage() {
       <PageShell>
         <div className="p-6 flex items-center justify-center min-h-[200px]">
           <p className="text-gray-500 text-sm font-medium">Loading challenges...</p>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!dashboard) {
+    return (
+      <PageShell>
+        <div className="p-6 flex items-center justify-center min-h-[240px]">
+          <div className="text-center space-y-2">
+            <p className="text-gray-300 text-sm font-medium">
+              Challenges data is unavailable.
+            </p>
+            <p className="text-gray-600 text-sm">
+              {error ?? "Start the backend and set NEXT_PUBLIC_API_URL."}
+            </p>
+          </div>
         </div>
       </PageShell>
     );
@@ -210,7 +210,7 @@ export default function ChallengesPage() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeList.map((challenge) => {
-              const current = challenge.progress ?? 0;
+              const current = Math.round(getChallengeCurrentSpend(challenge));
               const target = challenge.goal;
               const pct = target > 0 ? Math.round((current / target) * 100) : 0;
               const remaining = target - current;
@@ -385,7 +385,7 @@ export default function ChallengesPage() {
                   className="w-full border border-white/[0.08] bg-surface-3 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-blue/40 font-mono"
                 />
                 <p className="text-xs text-gray-600 mt-1 font-normal">
-                  AI-suggested target based on your prediction: $274
+                  AI-suggested target based on your prediction: ${Math.round(dashboard.forecast.next7DaysTotal)}
                 </p>
               </div>
               <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useState, useEffect } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -23,9 +23,14 @@ import {
 import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
 import { api } from "@/lib/api";
+import {
+  buildPredictionBreakdown,
+  buildWhatIfScenarios,
+  type WhatIfScenario,
+} from "@/lib/dashboard";
+import { getStoredMonthlyBudget } from "@/lib/preferences";
 import { getDashboardTypographyVars } from "@/lib/typography";
-import eventsData from "@/mocks/events.json";
-import predictionsData from "@/mocks/predictions.json";
+import type { CalendarEvent, ForecastCategory } from "@/lib/types";
 
 import { CATEGORY_COLORS, CHART_TOOLTIP_STYLE } from "@/lib/constants";
 
@@ -47,16 +52,13 @@ type EventRow = {
   calendar: string;
 };
 
-type EventInput = {
-  id: string;
-  title: string;
-  start: string;
-  end?: string;
-  predictedSpend?: number;
-  category?: string;
-  calendarType?: string;
+type BreakdownEntry = {
+  name: string;
+  value: number;
+  color: string;
 };
-function toEventRow(evt: EventInput): EventRow {
+
+function toEventRow(evt: CalendarEvent): EventRow {
   const start = new Date(evt.start);
   return {
     id: evt.id,
@@ -78,108 +80,108 @@ function toEventRow(evt: EventInput): EventRow {
   };
 }
 
-const fallbackEvents = (eventsData as EventInput[]).map(toEventRow);
-const fallbackPrediction = predictionsData.spendingPrediction;
-const fallbackBreakdown = [
-  {
-    name: "Food",
-    value: fallbackPrediction.breakdown.food,
-    color: "#2E90FA",
-  },
-  {
-    name: "Entertainment",
-    value: fallbackPrediction.breakdown.entertainment,
-    color: "#F79009",
-  },
-  {
-    name: "Transport",
-    value: fallbackPrediction.breakdown.transport,
-    color: "#10A861",
-  },
-  {
-    name: "Other",
-    value: fallbackPrediction.breakdown.other,
-    color: "#737373",
-  },
-];
+function buildBreakdownChart(breakdown: ForecastCategory[]): BreakdownEntry[] {
+  return breakdown.map((category) => ({
+    name: category.name,
+    value: category.value,
+    color: categoryColors[category.key] ?? "#737373",
+  }));
+}
 
 export default function PredictionsPage() {
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [skippedEvents, setSkippedEvents] = useState<Set<string>>(new Set());
-  const [weeklyEvents, setWeeklyEvents] =
-    useState<EventRow[]>(fallbackEvents);
-  const [spendingPrediction, setSpendingPrediction] =
-    useState(fallbackPrediction);
-  const [breakdownData, setBreakdownData] = useState(fallbackBreakdown);
+  const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
+  const [monthlyBudget, setMonthlyBudget] = useState(getStoredMonthlyBudget);
+  const [spendingPrediction, setSpendingPrediction] = useState({
+    total: 0,
+    confidence: 0.82,
+    lastWeekActual: 0,
+    breakdown: {
+      food: 0,
+      entertainment: 0,
+      transport: 0,
+      other: 0,
+    },
+  });
+  const [whatIfTotal, setWhatIfTotal] = useState(0);
+  const [breakdownData, setBreakdownData] = useState<BreakdownEntry[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!process.env.NEXT_PUBLIC_API_URL);
 
+  const weeklyEvents = useMemo(() => allEvents.map(toEventRow), [allEvents]);
+  const whatIfScenarios = useMemo<WhatIfScenario[]>(
+    () => buildWhatIfScenarios(allEvents, spendingPrediction.total),
+    [allEvents, spendingPrediction.total]
+  );
+
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_API_URL) {
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
+
     api
-      .getDashboard()
+      .getDashboard({ monthlyBudget: getStoredMonthlyBudget() })
       .then((data) => {
+        if (cancelled) return;
+
         if (data.events?.length) {
-          const rows = data.events.map((e: EventInput) =>
-            toEventRow({
-              id: e.id,
-              title: e.title,
-              start: e.start,
-              end: e.end,
-              predictedSpend: e.predictedSpend,
-              category: e.category,
-              calendarType: e.calendarType,
-            })
-          );
-          setWeeklyEvents(rows);
+          setAllEvents(data.events);
         }
-        const pred = data.forecast;
-        if (pred?.next7DaysTotal != null) {
-          const total = pred.next7DaysTotal;
-          const breakdown = pred.byCategory ?? [];
+
+        const forecast = data.forecast;
+        if (forecast?.monthlyBudget != null) {
+          setMonthlyBudget(forecast.monthlyBudget);
+        }
+        if (forecast?.next7DaysTotal != null) {
+          const total = Math.round(forecast.next7DaysTotal);
+          const breakdown = forecast.byCategory ?? [];
           setSpendingPrediction({
-            total: Math.round(total),
+            total,
             confidence: 0.82,
-            lastWeekActual: fallbackPrediction.lastWeekActual,
-            breakdown: {
-              food:
-                breakdown.find((c: { key: string }) => c.key === "food")
-                  ?.value ?? 0,
-              entertainment:
-                breakdown.find(
-                  (c: { key: string }) => c.key === "entertainment"
-                )?.value ?? 0,
-              transport:
-                breakdown.find(
-                  (c: { key: string }) => c.key === "transport"
-                )?.value ?? 0,
-              other:
-                breakdown.find((c: { key: string }) => c.key === "other")
-                  ?.value ?? 37,
-            },
+            lastWeekActual: Math.max(0, total - data.dashboardStats.weekOverWeekDelta),
+            breakdown: buildPredictionBreakdown(breakdown),
           });
-          setBreakdownData(
-            breakdown.length
-              ? breakdown.map((c: { name: string; value: number }) => ({
-                  name: c.name,
-                  value: c.value,
-                  color:
-                    categoryColors[c.name.toLowerCase()] ?? "#737373",
-                }))
-              : fallbackBreakdown
-          );
+          setWhatIfTotal(total);
+          setBreakdownData(buildBreakdownChart(breakdown));
         }
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const { whatIfScenarios } = predictionsData;
-  const currentTotal = weeklyEvents
-    .filter((e) => !skippedEvents.has(e.id))
-    .reduce((sum, e) => sum + e.predictedSpend, 0);
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_API_URL || !allEvents.length) {
+      return;
+    }
+
+    let cancelled = false;
+    const activeEvents = allEvents.filter((event) => !skippedEvents.has(event.id));
+
+    api
+      .runPipeline(activeEvents, monthlyBudget)
+      .then((data) => {
+        if (cancelled) return;
+        setWhatIfTotal(Math.round(data.forecast.next7DaysTotal));
+        setBreakdownData(buildBreakdownChart(data.forecast.byCategory ?? []));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [allEvents, monthlyBudget, skippedEvents]);
+
+  const currentTotal = whatIfTotal;
   const savings = spendingPrediction.total - currentTotal;
 
   const toggleSkip = (eventId: string) => {
@@ -223,6 +225,23 @@ export default function PredictionsPage() {
           <p className="text-gray-500 text-sm font-medium">
             Loading&hellip;
           </p>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!allEvents.length) {
+    return (
+      <PageShell>
+        <div className="p-8 flex items-center justify-center min-h-[240px]">
+          <div className="text-center space-y-2">
+            <p className="text-gray-300 text-sm font-medium">
+              Prediction data is unavailable.
+            </p>
+            <p className="text-gray-600 text-sm">
+              {error ?? "Start the backend and set NEXT_PUBLIC_API_URL."}
+            </p>
+          </div>
         </div>
       </PageShell>
     );
