@@ -1,6 +1,6 @@
 # 💰 FutureSpend — See Tomorrow, Save Today, Share Success
 
-An **AI-powered personal finance and spending forecast system** that connects your calendar to spending predictions. The system analyzes upcoming events (meals, outings, transport), predicts likely spend by category, and surfaces insights, savings challenges, and an AI coach. Built with a **FastAPI backend** and **Next.js** frontend, with optional **Google Gemini** for natural-language advice.
+Built in 24 hours at a hackathon sponsored by **SFU CSSS** and **RBC**, FutureSpend is an **AI-powered personal finance and spending forecast system** that connects your calendar to spending predictions. The system analyzes upcoming events (meals, outings, transport), predicts likely spend by category, and surfaces insights, savings challenges, and an AI coach. It uses a **FastAPI backend** and **Next.js** frontend, with optional **Google Gemini** for natural-language advice.
 
 ---
 
