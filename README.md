@@ -160,4 +160,15 @@ MIT License. Feel free to use and modify with attribution. See the [`LICENSE`](.
 
 ## 👤 Authors
 
-**FutureSpend team** — built for the Mountain Madness Hackathon.
+
+**Ilian Khankhalaev**  
+_BSc Computing Science, Simon Fraser University_  
+📍 Vancouver, BC  |  [florykhan@gmail.com](mailto:florykhan@gmail.com)  |  [GitHub](https://github.com/florykhan)  |  [LinkedIn](https://www.linkedin.com/in/ilian-khankhalaev/)
+
+**Nikolay Deinego**  
+_BSc Computing Science, Simon Fraser University_  
+📍 Vancouver, BC  | [GitHub](https://github.com/Deinick)  |  [LinkedIn](https://www.linkedin.com/in/nikolay-deinego/)
+
+**Rushik Behal**  
+_BSc Computing Science, Simon Fraser University_  
+📍 Vancouver, BC  | [GitHub](https://github.com/Rushik-B)  |  [LinkedIn](https://www.linkedin.com/in/rushik-behal/)
