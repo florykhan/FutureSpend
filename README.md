@@ -26,6 +26,9 @@ The app is deployed on **GitHub Pages** with the backend on **Render**. Try it h
 > ⚠️ **Note:**  
 > On Render’s free tier the backend may **spin down** after inactivity; the first request can take 30–60 seconds. Refresh or wait and try again.
 
+![Financial dashboard](./frontend/public/dashboard.png)
+_Financial dashboard with spending forecasts, category insights, and budgeting metrics_
+
 ---
 
 ## ✨ Key Features
