@@ -114,20 +114,21 @@ cd FutureSpend
 
 ```bash
 cd backend
+# Copy `.env.example` to `.env` and set `GEMINI_API_KEY` for the AI coach
 python3 -m venv venv
 source venv/bin/activate   # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-Runs at `http://localhost:8000`. Optional: copy `.env.example` to `.env` and set `GEMINI_API_KEY` for the AI coach.
+Runs at `http://localhost:8000`.
 
 ### 3️⃣ Frontend
 
 ```bash
 cd frontend
 cp .env.example .env.local
-# Edit .env.local and set: NEXT_PUBLIC_API_URL=http://localhost:8000
+# Edit .env.local and set: NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/
 npm install
 npm run dev
 ```
