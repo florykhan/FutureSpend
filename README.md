@@ -114,7 +114,8 @@ cd FutureSpend
 
 ```bash
 cd backend
-# Copy `.env.example` to `.env` and set `GEMINI_API_KEY` for the AI coach
+cp .env.example .env
+# Set `GEMINI_API_KEY` for the AI coach
 python3 -m venv venv
 source venv/bin/activate   # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
